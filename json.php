@@ -19,18 +19,6 @@ class Jason {
 
     /*
      *
-     * Print last JSON error
-     *
-     */
-    public function getJSONerror() {
-            $err = static::$json_errors[json_last_error()];
-            if ($err != JSON_ERROR_NONE)
-                echo '!! JSON ERROR => ' . $err;
-                
-    }
-
-    /*
-     *
      * Load JSON from file.
      * 
      *
@@ -47,13 +35,24 @@ class Jason {
 
     /*
      *
+     * Print last JSON error
+     *
+     */
+    public function getJSONerror() {
+            $err = static::$json_errors[json_last_error()];
+            if ($err != JSON_ERROR_NONE)
+                echo '!! JSON ERROR => ' . $err;
+                
+    }
+
+    /*
+     *
      * JSON decoding from file
      *
      *
      */
     public function decode($stuff) {
         $this->json = json_decode($stuff, JSON_PRETTY_PRINT);
-        return $this->json;
         $this->getJSONerror();
     }
 
@@ -75,7 +74,7 @@ class Jason {
      *
      */
     public function get($field) {
-        return $json[$field];
+        return $this->json[$field];
     }
 
     /*
@@ -84,7 +83,7 @@ class Jason {
      *
      */
     public function set($field, $value) {
-        $json[$field] = $value;
+        $this->json[$field] = $value;
     }
 
     /*
@@ -92,12 +91,16 @@ class Jason {
      * Write back JSON to config file
      *
      */
-    public function writeFile($file) {
-        file_put_contents($file, json_encode($json));
+    public function writeFile() {
+        file_put_contents(self::$config_file, json_encode($this->json));
     }
 }
 
+/* Test the Jason engine. */
 
 $j = new Jason();
 $j->toString();
+$j->set("name", "arst");
+$j->toString();
+print $j->get("name");
 ?>

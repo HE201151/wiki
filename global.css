@@ -1,0 +1,62 @@
+body {
+	font-family: Helvetica;
+	margin: 0;
+}
+
+header {
+	font-size: 30px;
+	padding: 10px;
+	color: white;
+	background-color: #34495e;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+}
+
+#banner {
+	float: left;
+	margin-top: 30px;
+	margin-left: 30px;
+}
+
+#banner a {
+	text-decoration: none;
+	color: white;
+}
+
+#login {
+	float: right;
+}
+
+#login a {
+	color: white;
+	text-decoration: none;
+}
+
+input[type="submit"], input[type="text"], input[type="password"] {
+    background-color: #34495e;
+    color: white;
+    border: 1px solid white;
+    height: 30px;
+}
+
+input[type="submit"]:hover {
+	background-color: white;
+	color: #34495e;
+}
+
+::-webkit-input-placeholder { /* WebKit browsers */
+    color:    white;
+}
+:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+   color:    white;
+   opacity:  1;
+}
+::-moz-placeholder { /* Mozilla Firefox 19+ */
+   color:    white;
+   opacity:  1;
+}
+:-ms-input-placeholder { /* Internet Explorer 10+ */
+   color:    white;
+}

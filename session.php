@@ -5,23 +5,6 @@
 	$gid = getGid();
 	$_SESSION['gid'] = $gid;
 
-	function incCount() {
-		if (!isset($_SESSION['count']))
-			$_SESSION['count'] = 0;
-		else
-			$_SESSION['count']++;
-	}
-
-	function showCount() {
-		if (isset($_SESSION['count']))
-			echo 'count = ' . $_SESSION['count'];
-	}
-
-	function resetCount() {
-		if (isset($_SESSION['count']))
-			$_SESSION['count'] = 0;
-	}
-
 	function showSession() {
 		echo '<pre>';
 		print_r($_SESSION);
@@ -51,7 +34,7 @@
 	function handleUsers() {
 		if (isPost('username')) {
 			if (isPost('password'))
-				return 'USER '. $_POST['username'] . ' just logged in';
+				return $_POST['username'];
 			else
 				return 'no password set';
 		} else {
@@ -89,11 +72,5 @@
 			default:
 				return 'invalid user id';
 		}
-	}
-
-	/* catch post */
-	if (isPost('submit')) {
-		resetCount();
-		header("Location: index.php");
 	}
 ?>

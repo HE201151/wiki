@@ -92,7 +92,13 @@ class Jason {
      *
      */
     public function writeFile() {
-        file_put_contents(self::$config_file, json_encode($this->json));
+        file_put_contents(self::$config_file, json_encode($this->json)); 
     }
+
 }
+    $ini = new Jason();
+
+    $ini->set('banner', 'old site');
+
+    $ini->writeFile();
 ?>

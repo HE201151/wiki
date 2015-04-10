@@ -2,8 +2,7 @@
 	// needed for utility functions
 	include 'session.php';
 
-	session_start();
-
+	// make sure the user did fill in username and pass
 	$username = handleUsers();
 
 	// connect to the database and check whether username exists. TODO put in own class with static 
@@ -17,6 +16,7 @@
     	$result = $sth->fetch(PDO::FETCH_OBJ);
     	if (!empty($result)) {
     		$_SESSION["username"] = $result->username;
+            $_SESSION['is_logged_in'] = TRUE;
     	}
     	$dbh = null;
 	} catch (PDOException $e) {

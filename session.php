@@ -1,9 +1,12 @@
-<?php
-	/* Start the session, this needs to be loaded everytime */
+<?php	
 	session_start();
-	
+
 	$gid = getGid();
 	$_SESSION['gid'] = $gid;
+
+	function isLoggedIn() {
+		return (getSession('is_logged_in'));
+	}
 
 	function showSession() {
 		echo '<pre>';
@@ -71,6 +74,12 @@
 				break;
 			default:
 				return 'invalid user id';
+		}
+	}
+
+	function page() {
+		if (isGet('page')) {
+			return get('page');
 		}
 	}
 ?>

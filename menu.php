@@ -1,6 +1,6 @@
 <?php
-
-include 'jason.php';
+	include 'jason.php';
+	include 'session.php';
 
 	function showBanner() {
 		$config = new Jason();
@@ -9,13 +9,20 @@ include 'jason.php';
 
 	function showLogin() {
 		echo '<div id="login">
-			<a href="user.php">user</a>
-			<a href="admin.php">admin</a>
-			<a href="log.php">logout</a>
 			<form method="post" action="login.php">
 				<input placeholder="user name" type="text" name="username">
 				<input placeholder="password" type="password" name="password">
 				<input type="submit" name="login" value="login">
 			</form>';
+	}
+
+	function getNavigation() {
+		echo "<ul>";
+		if (isLoggedIn()) {
+			echo "<li><a href=\"logout.php\">Log Out</a></li>";
+		} else {
+			echo "<li><a href=\"?page=register\">Register</a></li>";
+		}
+		echo "</ul>";
 	}
 ?>

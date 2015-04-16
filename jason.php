@@ -96,9 +96,11 @@ class Jason {
     }
 
 }
+/*
     $ini = new Jason();
 
     $ini->set('banner', 'old site');
 
     $ini->writeFile();
+*/
 ?>

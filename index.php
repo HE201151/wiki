@@ -6,8 +6,7 @@
 	</head>
 	<body>
 		<?php
-			include 'menu.php';
-			//include 'settings.php'; 
+			include 'menu.php'; 
 		?>
 		<header>
 			<?php showBanner(); showLogin(); ?>
@@ -20,8 +19,16 @@
 			if (page() === "register") {
 				include 'register.php';
 				getRegisterForm();
+			} else if (page() === "contact") {
+				include 'contact.php';
+				getContactForm();
 			} else {
-				echo getSession("username");
+				if (isLoggedIn()) {
+					echo '<a title="'.getSession("mail").'">'.getSession("username").'</a>';
+					echo getSession("mail");
+				} else {
+					echo "You are not logged in.";
+				}
 			}
  			?>
 		</article>

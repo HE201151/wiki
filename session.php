@@ -22,6 +22,10 @@
 		return (isset($_GET[$field]) && !empty($_GET[$field]));
 	}
 
+	function isSession($field) {
+		return (isset($_SESSION[$field]) && !empty($_SESSION[$field]));
+	}
+
 	function post($field) {
 		return $_POST[$field];
 	}
@@ -31,7 +35,14 @@
 	}
 
 	function getSession($field) {
-		return $_SESSION[$field];
+		if (isSession($field))
+			return $_SESSION[$field];
+	}
+
+	function setSession($field, $value) {
+		if (isLoggedIn()) {
+			$_SESSION[$field] = $value;
+		}
 	}
 
 	function handleUsers() {

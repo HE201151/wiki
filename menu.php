@@ -8,6 +8,11 @@
 	}
 
 	function showLogin() {
+		if (!empty(getSession('login_failed'))) {
+			echo '<div id="login_failed">
+					Login failed,' . getSession('login_failed') .
+				  '</div>';
+		}
 		if (!isLoggedIn()) {
 			echo '<div id="login">
 				<form method="post" action="login.php">

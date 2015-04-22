@@ -2,7 +2,7 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<title>PHP Test</title>
-		<link rel="stylesheet" type="text/css" href="/global.css" />
+		<link rel="stylesheet" type="text/css" href="global.css" />
 	</head>
 	<body>
 		<?php

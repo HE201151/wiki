@@ -47,4 +47,5 @@
 			</div>
 		</form>';
 	}
+	print_r($_POST);
 ?>

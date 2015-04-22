@@ -41,11 +41,10 @@
 		$text = post("message");
 		$message = wordwrap($text, 80, "\r\n");
 
-		mail($to, $from, $subject, $message, "-fyouri.mout@gmail.com");
+		mail($to, $from, $subject, $message);
 	}
 
 	try {
-		echo getSession("mail") . post("subject") . post("message");
 		sendMail();
 		echo 'mail sent..';
 	} catch (Exception $e) {

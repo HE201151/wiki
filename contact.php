@@ -13,7 +13,7 @@
 		echo (!isLoggedIn()) ? 
 				'<div class="row">
 					<label for="email">Your email:</label><br />
-					<input id="email" class="input" name="email" type="text" value="" size="30" /><br />
+					<input colspan="2" id="email" class="input" name="email" type="text" value="" size="30" /><br />
 				</div>'	: '';
 
 		echo '<div class="row">
@@ -27,8 +27,7 @@
 	}
 
 	function sendMail() {
-		$ini = new Jason();
-		$to = $ini->get("admin_mail");
+		$to = Jason::getOnce("admin_mail");
 
 		if (!isLoggedIn()) {
 			$from = post("email");
@@ -44,12 +43,11 @@
 		mail($to, $from, $subject, $message);
 	}
 
-	try {
-		sendMail();
-		echo 'mail sent..';
-	} catch (Exception $e) {
-		print $e;
-	} finally {
-		echo 'sending mail...';
+	if (isPost("message")) {
+		try {
+			sendMail();
+		} catch (Exception $e) {
+			print $e;
+		}
 	}
 ?>

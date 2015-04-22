@@ -1,7 +1,8 @@
 <?php
+/* XXX change to Singleton class ? */
 class Jason {
     /* config file path */
-    protected static $config_file = "file.ini";
+    private static $config_file = "config.ini";
     /* json data variable */
     private $json;
     /* fields */
@@ -77,6 +78,11 @@ class Jason {
         return $this->json[$field];
     }
 
+    public static function getOnce($field) {
+        $config = new Jason();
+        return $config->get($field);
+    }
+
     /*
      *
      * Set field value
@@ -96,11 +102,4 @@ class Jason {
     }
 
 }
-/*
-    $ini = new Jason();
-
-    $ini->set('banner', 'old site');
-
-    $ini->writeFile();
-*/
 ?>

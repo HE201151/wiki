@@ -1,6 +1,7 @@
 <?php
 
-include 'jason.php';
+include_once 'jason.php';
+include_once 'session.php';
 
 class db extends PDO {
 	protected static $tUser;
@@ -15,7 +16,7 @@ class db extends PDO {
 	protected $sth;
 
 	public function __construct() {
-		$config_file = new Jason();
+		$config_file = new Jason;
 		$this->database = $config_file->get('db');
 		$this->engine = $config_file->get('db_engine');
 		$this->host = $config_file->get('db_host');
@@ -54,6 +55,10 @@ class db extends PDO {
 		$this->sth->bindParam($var, $value, $type);
 	}
 	
+	public function exec() {
+		$this->sth->execute();
+	}
+
 	public function getAssoc() {
 		$this->sth->execute();
 		return $this->sth->fetch(PDO::FETCH_ASSOC);
@@ -63,16 +68,4 @@ class db extends PDO {
 		return $this->database;
 	}
 }
-/*
-try {
-	$d = new db();
-} catch (Exception $e) {
-	print $e->getMessage();
-}
-$d->request("select username from users where username = :u");
-$d->bind(":u", "youri");
-$results = $d->getAssoc();
-
-var_dump($results);
-*/
 ?>

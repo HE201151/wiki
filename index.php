@@ -18,7 +18,10 @@
 			<?php
 			if (page() === "register") {
 				include 'register.php';
-				getRegisterForm();
+				Register::getRegisterForm();
+			} else if (page() === "registerDone") {
+				include 'register.php';
+				Register::getSuccessfulRegistrationMessage();
 			} else if (page() === "contact") {
 				include 'contact.php';
 				getContactForm();

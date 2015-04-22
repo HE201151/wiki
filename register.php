@@ -1,6 +1,16 @@
 <?php
-	function getRegisterForm() {
-		echo '
+	include_once 'db.php';
+
+class Register {
+	private $username;
+	private $password;
+	private $email;
+
+	// needed for querying existing values
+	private $db;
+
+	public static function getRegisterForm() {
+		print '
 		<form id="register" action="register.php" method="post" accept-charset="UTF-8">
 			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
 			<tbody>
@@ -47,5 +57,99 @@
 			</div>
 		</form>';
 	}
-	print_r($_POST);
+
+	public static function getSuccessfulRegistrationMessage() {
+		print '<div id="register">Registration was successful, please check your email !</div>';
+	}
+
+	/* XXX need error class */
+	public function __construct() {
+		try {
+			$this->db = new db();
+		} catch (Exception $e) {
+			$_SESSION['error_banner'] = $e->getMessage();
+		}
+
+		try {
+			$this->sanitizeUsername();
+		} catch (Exception $e) {
+			$_SESSION['error_banner'] = $e->getMessage();
+			return;
+		}
+
+		try {
+			$this->checkPassword();
+		} catch (Exception $e) {
+			$_SESSION['error_banner'] = $e->getMessage();
+			return;
+		}
+
+		try {
+			$this->checkEmail();
+		} catch (Exception $e) {
+			$_SESSION['error_banner'] = $e->getMessage();
+			return;
+		}
+
+		try {
+			$this->insertUser();
+		} catch (Exception $e) {
+			$_SESSION['error_banner'] = $e->getMessage();
+			return;
+		}
+
+		$_SESSION['error_banner'] = "";
+	}
+
+	private function sanitizeUsername() {
+		$this->username = htmlspecialchars(post('name'));
+		$config = new Jason();
+		$minSize = $config->get('login_min_size');
+
+		if (strlen($this->username) < $minSize) {
+			throw new Exception('Username too short');
+		}
+
+		// Check if username already exists
+		$this->db->request('SELECT 1 from users where username = :username');
+		$this->db->bind(':username', $this->username);
+		$userExists = $this->db->getAssoc();
+		if (!empty($userExists)) {
+			throw new Exception('Username is already used');
+		}
+	}
+
+	private function checkPassword() {
+		$this->password = post('password');
+		if ($this->password != post('password2')) {
+			throw new Exception('Passwords do not match');
+		}
+	}
+
+	private function checkEmail() {
+		if (!filter_var(post('email'), FILTER_VALIDATE_EMAIL) === false) {
+			$this->email = post('email');
+		} else {
+			throw new Exception('Invalid email address');
+		}
+		if (strcmp($this->email, post('email2')) !== 0) {
+			throw new Exception('Emails do not match');
+		}
+	}
+
+	private function insertUser() {
+		$this->db->request('INSERT into users (username, password, created, mail) VALUES (:username, :password, now(), :mail);');
+		$this->db->bind(':username', $this->username);
+		$this->db->bind(':password', $this->password);
+		$this->db->bind(':mail', $this->email);
+		$this->db->exec();
+		$this->db = null;
+	}
+}
+
+if (!empty($_POST)) {
+	$newUser = new Register();
+	header("Location: index.php?page=registerDone");
+}
+
 ?>

@@ -1,17 +1,14 @@
 <?php
-	include 'jason.php';
-	include 'session.php';
+	include_once 'jason.php';
+	include_once 'session.php';
 
 	function showBanner() {
-		$config = new Jason();
-		echo '<div id="banner"><a href="/">' . $config->get("banner") . "</a></div>";
+		echo '<div id="banner"><a href="/">' . Jason::getOnce("banner") . "</a></div>";
 	}
 
 	function showLogin() {
-		if (!empty(getSession('login_failed'))) {
-			echo '<div id="login_failed">
-					Login failed,' . getSession('login_failed') .
-				  '</div>';
+		if (!empty(getSession('error_banner'))) {
+			echo '<div id="login_failed">' . getSession('error_banner') . '</div>';
 		}
 		if (!isLoggedIn()) {
 			echo '<div id="login">

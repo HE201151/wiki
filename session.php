@@ -39,11 +39,8 @@
 			return $_SESSION[$field];
 	}
 
-	// XXX broken
 	function setSession($field, $value) {
-		if (isLoggedIn()) {
-			$_SESSION[$field] = $value;
-		}
+		$_SESSION[$field] = $value;
 	}
 
 	function handleUsers() {

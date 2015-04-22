@@ -1,5 +1,6 @@
 <?php
 	include_once 'db.php';
+	include_once 'error.php';
 
 class Register {
 	private $username;
@@ -67,50 +68,56 @@ class Register {
 		try {
 			$this->db = new db();
 		} catch (Exception $e) {
-			$_SESSION['error_banner'] = $e->getMessage();
+			Error::exception($e);
+			return;
 		}
 
 		try {
 			$this->sanitizeUsername();
 		} catch (Exception $e) {
-			$_SESSION['error_banner'] = $e->getMessage();
+			Error::exception($e);
 			return;
 		}
 
 		try {
 			$this->checkPassword();
 		} catch (Exception $e) {
-			$_SESSION['error_banner'] = $e->getMessage();
+			Error::exception($e);
 			return;
 		}
 
 		try {
 			$this->checkEmail();
 		} catch (Exception $e) {
-			$_SESSION['error_banner'] = $e->getMessage();
+			Error::exception($e);
 			return;
 		}
 
 		try {
 			$this->insertUser();
 		} catch (Exception $e) {
-			$_SESSION['error_banner'] = $e->getMessage();
+			Error::exception($e);
 			return;
 		}
 
-		$_SESSION['error_banner'] = "";
+		Error::alliswell();
 	}
 
 	private function sanitizeUsername() {
 		$this->username = htmlspecialchars(post('name'));
 		$config = new Jason();
 		$minSize = $config->get('login_min_size');
+		$maxSize = $config->get('login_max_size');
 
 		if (strlen($this->username) < $minSize) {
 			throw new Exception('Username too short');
 		}
 
-		// Check if username already exists
+		if (strlen($this->username) > $maxSize) {
+			throw new Exception('Username too long');
+		}
+
+		// Check if username is already used
 		$this->db->request('SELECT 1 from users where username = :username');
 		$this->db->bind(':username', $this->username);
 		$userExists = $this->db->getAssoc();
@@ -135,6 +142,14 @@ class Register {
 		if (strcmp($this->email, post('email2')) !== 0) {
 			throw new Exception('Emails do not match');
 		}
+
+		// Check if email is already used
+		$this->db->request('SELECT 1 from users where mail = :mail');
+		$this->db->bind(':mail', $this->email);
+		$emailExists = $this->db->getAssoc();
+		if (!empty($emailExists)) {
+			throw new Exception('Email is already used');
+		}
 	}
 
 	private function insertUser() {
@@ -147,9 +162,19 @@ class Register {
 	}
 }
 
+
+/* Submit registration form */
 if (!empty($_POST)) {
 	$newUser = new Register();
-	header("Location: index.php?page=registerDone");
+	/* if no errors, go to done page */
+	if (Error::none()) {
+		header("Location: index.php?page=registerDone");
+	/* otherwise go back */
+	} else {
+		print '<script type="text/javascript">'
+   			. 'history.go(-1);'
+   			. '</script>';
+	}
 }
 
 ?>

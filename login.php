@@ -3,6 +3,7 @@
 	// needed for utility functions
     include_once 'db.php';
 	include_once 'session.php';
+    include_once 'error.php';
 
 	// make sure the user did fill in username and pass
 	$username = handleUsers();
@@ -12,14 +13,14 @@
     $db->bind(':name', $username);
     $db->bind(':pass', post('password'));
     $result = $db->getAssoc();
-    
+
     if (!empty($result)) {
         $_SESSION["username"] = $result['username'];
         $_SESSION["mail"] = $result['mail'];
-        $_SESSION['error_banner'] = "";
+        Error::alliswell();
         $_SESSION['is_logged_in'] = TRUE;
     } else {
-        $_SESSION['error_banner'] = "wrong username or password";
+        Error::set("wrong username or password");
     }
 
     $db = null;

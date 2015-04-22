@@ -28,8 +28,7 @@ class db extends PDO {
 			parent::__construct($dsn, $this->user, $this->pw);
 			$this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		} catch (PDOException $e) {
-    		print "Error!: " . $e->getMessage() . "<br/>";
-    		die();
+    		Error::exception($e);
 		}
 	}
 

@@ -1,6 +1,7 @@
 <?php
 	include_once 'db.php';
 	include_once 'error.php';
+	include_once 'hash.php';
 
 class Register {
 	private $username;
@@ -127,10 +128,10 @@ class Register {
 	}
 
 	private function checkPassword() {
-		$this->password = post('password');
-		if ($this->password != post('password2')) {
+		if (post('password') !== post('password2')) {
 			throw new Exception('Passwords do not match');
 		}
+		$this->password = Hash::get(post('password'));
 	}
 
 	private function checkEmail() {

@@ -28,6 +28,10 @@
 				include 'mail.php';
 				Mail::getContactForm();
 
+			} else if (page() === "logout") {
+				include 'log.php';
+				Log::logout();
+
 			} else {
 				if (isLoggedIn()) {
 					echo '<a title="'.getSession("mail").'">'.getSession("username").'</a>';

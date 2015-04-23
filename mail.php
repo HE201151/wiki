@@ -67,7 +67,7 @@ class Mail {
 		if (empty($msg)) {
 			throw new Exception('empty message');
 		}
-		$html = Jason::getOnce('msg_allow_html') === "true" ? TRUE : FALSE;
+		$html = Jason::getOnce('msg_allow_html');
 		if ($html) {
 			// XXX validate HTML messages to avoid XSS
 			$message = $msg;
@@ -81,12 +81,7 @@ class Mail {
 		$headers .= "Content-Type: text/";
 		$headers .= $html ? "html" : "plain";
 		$headers .= "; charset=ISO-8859-1\r\n";
-		//$headers .= "Content-Type: text/html; charset=ISO-8859-1\r\n";
 
-		var_dump($to);
-		var_dump($subject);
-		var_dump($message);
-		var_dump($headers);
 		mail($to, $subject, $message, $headers);
 	}
 

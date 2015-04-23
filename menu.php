@@ -13,7 +13,7 @@
 		}
 		if (!isLoggedIn()) {
 			echo '<div id="login">
-				<form method="post" action="login.php">
+				<form method="post" action="log.php">
 					<input placeholder="user name" type="text" name="username">
 					<input placeholder="password" type="password" name="password">
 					<input type="submit" name="login" value="login">
@@ -27,7 +27,7 @@
 		echo "<ul>";
 		if (isLoggedIn()) {
 			echo '<li><a href="?page=profile">Profile</a></li>';
-			echo '<li><a href="logout.php">Log Out</a></li>';
+			echo '<li><a href="?page=logout">Log Out</a></li>';
 		} else {
 			echo '<li><a href="?page=register">Register</a></li>';
 		}

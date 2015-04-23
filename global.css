@@ -11,6 +11,16 @@ header {
 	min-height: 80px;
 }
 
+header a {
+	transition: border-bottom .1s ease-in-out;
+    padding-bottom: 3px;
+    border-bottom: 3px solid transparent;
+}
+
+header a:hover {
+	border-bottom: 3px solid white;
+}
+
 nav {
 	width: 15%;
 	float: left;

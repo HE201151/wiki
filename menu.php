@@ -19,7 +19,7 @@
 					<input type="submit" name="login" value="login">
 				</form>';
 		} else {
-			echo '<div id="login">You are logged in as ' . getSession("username") . '</div>';
+			echo '<div id="login">You are logged in as <a href="?page=profile">' . getSession("username") . '</a></div>';
 		}
 	}
 

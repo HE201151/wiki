@@ -2,6 +2,7 @@
 	include_once 'db.php';
 	include_once 'error.php';
 	include_once 'hash.php';
+	include_once 'mail.php';
 
 class Register {
 	private $username;
@@ -135,7 +136,7 @@ class Register {
 	}
 
 	private function checkEmail() {
-		if (!filter_var(post('email'), FILTER_VALIDATE_EMAIL) === false) {
+		if (Mail::validateEmail(post('email'))) {
 			$this->email = post('email');
 		} else {
 			throw new Exception('Invalid email address');

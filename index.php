@@ -6,7 +6,7 @@
 	</head>
 	<body>
 		<?php
-			include 'menu.php'; 
+			include 'menu.php';
 		?>
 		<header>
 			<?php showBanner(); showLogin(); ?>
@@ -19,12 +19,15 @@
 			if (page() === "register") {
 				include 'register.php';
 				Register::getRegisterForm();
+
 			} else if (page() === "registerDone") {
 				include 'register.php';
 				Register::getSuccessfulRegistrationMessage();
+
 			} else if (page() === "contact") {
-				include 'contact.php';
-				getContactForm();
+				include 'mail.php';
+				Mail::getContactForm();
+
 			} else {
 				if (isLoggedIn()) {
 					echo '<a title="'.getSession("mail").'">'.getSession("username").'</a>';

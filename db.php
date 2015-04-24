@@ -4,16 +4,13 @@ include_once 'jason.php';
 include_once 'session.php';
 
 class db extends PDO {
-	protected static $tUser;
-	
-	protected $database;
-	protected $engine;
-	protected $host;
-	protected $user;
-	protected $pw;
-
-	protected $req;
-	protected $sth;
+	private $database;
+	private $engine;
+	private $host;
+	private $user;
+	private $pw;
+	private $req;
+	private $sth;
 
 	public function __construct() {
 		$config_file = new Jason;

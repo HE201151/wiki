@@ -29,6 +29,10 @@ class Mail {
 		</form>	';
 	}
 
+	public static function getSuccessfulContactMessage() {
+		print '<div id="register">Message successfully sent.</div>';
+	}
+
 	public function sendMailFromPost() {
 		$to = Jason::getOnce("admin_mail");
 
@@ -48,6 +52,8 @@ class Mail {
 		$headers .= "Content-Type: text/html; charset=ISO-8859-1\r\n";
 
 		mail($to, $subject, $message, $headers);
+
+		header("Location: index.php?page=contactDone");
 	}
 
 	public static function validateEmail($email) {
@@ -87,21 +93,13 @@ class Mail {
 
 }
 
-if (isPost("message")) {
+if (isPost('subject')) {
 	try {
 		$mail = new Mail();
 		$mail->sendMailFromPost();
-		if (Error::none()) {
-			header("Location: index.php?page=mailDone");
-		}
 	} catch (Exception $e) {
 		Error::exception($e);
 	}
 }
 
-try {
-	Mail::sendMail('youri.mout@gmail.com', 'test@test.com', 'hai', 'hello');
-} catch (Exception $e) {
-	print $e->getMessage();
-}
 ?>

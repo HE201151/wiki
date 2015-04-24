@@ -8,11 +8,11 @@ include_once 'hash.php';
 
 class Log {
     public function __construct() {
-    	// make sure the user did fill in username and pass
-    	$username = handleUsers();
+        // make sure the user did fill in username and pass
+        $username = handleUsers();
 
-        $db = new db();
-        $db->request('SELECT username, mail from users WHERE username = :name and password = :pass');
+        $db = new db;
+        $db->request('SELECT username, mail FROM users WHERE username = :name AND password = :pass');
         $db->bind(':name', $username);
         $db->bind(':pass', Hash::get(post('password')));
         $result = $db->getAssoc();
@@ -22,7 +22,8 @@ class Log {
             $_SESSION["mail"] = $result['mail'];
             Error::alliswell();
             $_SESSION['is_logged_in'] = TRUE;
-            $db->request('UPDATE users SET lastconnect=now();');
+            $db->request('UPDATE users SET lastconnect=now() WHERE username = :username');
+            $db->bind(':username', $_SESSION["username"]);
             $db->exec();
         } else {
             Error::set("wrong username or password");
@@ -30,9 +31,7 @@ class Log {
     }
 
     public static function logout() {
-        if(session_id() == '') {
-            session_start();
-        }
+        session_start();
         $_SESSION = array();
         session_unset();
         session_destroy();
@@ -43,7 +42,7 @@ class Log {
 }
 
 if (!empty($_POST)) {
-    $log = new Log();
+    $log = new Log;
     header("Location: index.php");
 }
 ?>

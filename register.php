@@ -3,8 +3,10 @@
 	include_once 'error.php';
 	include_once 'hash.php';
 	include_once 'mail.php';
+	include_once 'user.php';
 
 class Register {
+	private $id;
 	private $username;
 	private $password;
 	private $email;
@@ -62,10 +64,17 @@ class Register {
 	}
 
 	public static function getSuccessfulRegistrationMessage() {
-		print '<div id="register">Registration was successful, please check your email !</div>';
+		print '<div id="register">Registration was successful, please check your email.</div>';
 	}
 
-	/* XXX need error class */
+	public static function getSuccessfulActivationMessage() {
+		print '<div id="register">User successfully activated, you can now log in.</div>';
+	}
+
+	public static function getWrongActivationMessage() {
+		print '<div id="register">This code does not exist.</div>';
+	}
+
 	public function __construct() {
 		try {
 			$this->db = new db();
@@ -120,7 +129,7 @@ class Register {
 		}
 
 		// Check if username is already used
-		$this->db->request('SELECT 1 from users where username = :username');
+		$this->db->request('SELECT 1 FROM users WHERE username = :username');
 		$this->db->bind(':username', $this->username);
 		$userExists = $this->db->getAssoc();
 		if (!empty($userExists)) {
@@ -146,7 +155,7 @@ class Register {
 		}
 
 		// Check if email is already used
-		$this->db->request('SELECT 1 from users where mail = :mail');
+		$this->db->request('SELECT 1 FROM users WHERE mail = :mail');
 		$this->db->bind(':mail', $this->email);
 		$emailExists = $this->db->getAssoc();
 		if (!empty($emailExists)) {
@@ -154,20 +163,70 @@ class Register {
 		}
 	}
 
+	private function getUserId() {
+		$this->db->request('SELECT id from users WHERE username = :username');
+		$this->db->bind(':username', $this->username);
+		$result = $this->db->getAssoc();
+		$this->id = $result['id'];
+	}
+
+	private function insertActivationCode() {
+		$this->db->request('INSERT into activations (users_id, activationCode) VALUES (:id, :code);');
+		$this->db->bind(':id', $this->id);
+		$this->db->bind(':code', uniqid());
+		$this->db->exec();
+	}
+
+	private function sendActivationMail() {
+		$msg = 'Hello, please click on the following link to activate your account:<br />'
+				. '<a href="index.php?page=activation&activation=' . $this->id .  '</a>';
+
+		Mail::sendMail($this->email, Jason::getOnce("admin_mail"), 'Account activation', $msg);
+	}
+
 	private function insertUser() {
-		$this->db->request('INSERT into users (username, password, created, mail) VALUES (:username, :password, now(), :mail);');
+		/* insert user in users table */
+		$this->db->request('INSERT into users (username, password, created, mail, status) VALUES (:username, :password, now(), :mail, :status);');
 		$this->db->bind(':username', $this->username);
 		$this->db->bind(':password', $this->password);
 		$this->db->bind(':mail', $this->email);
+		$this->db->bind(':status', UserStatus::Registered);
 		$this->db->exec();
-		$this->db = null;
+
+		$this->getUserId();
+
+		$this->insertActivationCode();
+
+		$this->sendActivationMail();
+	}
+
+	public function getId() {
+		return $this->id;
+	}
+
+	public function getUsername() {
+		return $this->username;
+	}
+
+	public static function activate() {
+		$db = new db;
+		$db->request('SELECT users_id, activationCode FROM activations WHERE activationCode = :code');
+		$db->bind(':code', get('activation'));
+		$result = $db->getAssoc();
+		if (!empty($result)) {
+			User::elevate($result['users_id'], UserStatus::User);
+			self::getSuccessfulActivationMessage();
+		} else {
+			self::getWrongActivationMessage();
+		}
+		$db = null;
 	}
 }
 
 
 /* Submit registration form */
 if (!empty($_POST)) {
-	$newUser = new Register();
+	$newUser = new Register;
 	/* if no errors, go to done page */
 	if (Error::none()) {
 		header("Location: index.php?page=registerDone");

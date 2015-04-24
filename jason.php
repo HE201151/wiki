@@ -79,7 +79,7 @@ class Jason {
     }
 
     public static function getOnce($field) {
-        $config = new Jason();
+        $config = new Jason;
         return $config->get($field);
     }
 

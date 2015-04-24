@@ -24,9 +24,17 @@
 				include 'register.php';
 				Register::getSuccessfulRegistrationMessage();
 
+			} else if (page() === "activation") {
+				include 'register.php';
+				Register::activate();
+
 			} else if (page() === "contact") {
 				include 'mail.php';
 				Mail::getContactForm();
+
+			} else if (page() === "contactDone") {
+				include 'mail.php';
+				Mail::getSuccessfulContactMessage();
 
 			} else if (page() === "logout") {
 				include 'log.php';

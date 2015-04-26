@@ -1,7 +1,7 @@
 <?php
 
 include_once 'jason.php';
-include_once 'session.php';
+include_once 'utils.php';
 
 class db extends PDO {
 	private $database;

@@ -115,7 +115,7 @@ class Register {
 	}
 
 	private function sanitizeUsername() {
-		$this->username = htmlspecialchars(post('name'));
+		$this->username = htmlspecialchars(Utils::post('name'));
 		$config = new Jason;
 		$minSize = $config->get('login_min_size');
 		$maxSize = $config->get('login_max_size');
@@ -138,11 +138,11 @@ class Register {
 	}
 
 	private function checkPassword() {
-		if (post('password') !== post('password2')) {
+		if (Utils::post('password') !== Utils::post('password2')) {
 			throw new Exception('Passwords do not match');
 		}
 
-		$pwd = post('password');
+		$pwd = Utils::post('password');
 		
 		$config = new Jason;
 
@@ -170,12 +170,12 @@ class Register {
 	}
 
 	private function checkEmail() {
-		if (Mail::validateEmail(post('email'))) {
-			$this->email = post('email');
+		if (Mail::validateEmail(Utils::post('email'))) {
+			$this->email = Utils::post('email');
 		} else {
 			throw new Exception('Invalid email address');
 		}
-		if (strcmp($this->email, post('email2')) !== 0) {
+		if (strcmp($this->email, Utils::post('email2')) !== 0) {
 			throw new Exception('Emails do not match');
 		}
 
@@ -254,7 +254,7 @@ class Register {
 	public static function activate() {
 		$db = new db;
 		$db->request('SELECT users_id, activationCode FROM activations WHERE activationCode = :code');
-		$db->bind(':code', get('activationCode'));
+		$db->bind(':code', Utils::get('activationCode'));
 		$result = $db->getAssoc();
 		if (!empty($result)) {
 			// upgrade user

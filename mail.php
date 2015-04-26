@@ -1,6 +1,6 @@
 <?php
 
-include_once 'session.php';
+include_once 'utils.php';
 include_once 'jason.php';
 include_once 'error.php';
 
@@ -13,7 +13,7 @@ class Mail {
 				<input id="subject" class="input" name="subject" type="text" value="" size="30" /><br />
 			</div>';
 
-		print (!isLoggedIn()) ? 
+		print (!Utils::isLoggedIn()) ? 
 				'<div class="row">
 					<label for="email">Your email:</label><br />
 					<input colspan="2" id="email" class="input" name="email" type="text" value="" size="30" /><br />
@@ -36,20 +36,22 @@ class Mail {
 	public function sendMailFromPost() {
 		$to = Jason::getOnce("admin_mail");
 
-		if (!isLoggedIn()) {
-			$from = post("email");
+		if (!Utils::isLoggedIn()) {
+			$from = Utils::post("email");
 		} else {
-			$from = getSession("mail");
+			$from = Utils::getSession("mail");
 		}
 
-		$subject = post("subject");
+		$html = Jason::getOnce('msg_allow_html');
 
-		$message = post("message");
+		$subject = Utils::post("subject");
+
+		$message = Utils::post("message");
 
 		$headers  = "From: " . $from  . "\r\n";
 		$headers .= "Reply-To: " . $from . "\r\n";
 		$headers .= "MIME-Version: 1.0\r\n";
-		$headers .= "Content-Type: text/html; charset=ISO-8859-1\r\n";
+		$headers .= "Content-Type: text/" . $html ? "html" : "plain" . "; charset=ISO-8859-1\r\n";
 
 		mail($to, $subject, $message, $headers);
 	}

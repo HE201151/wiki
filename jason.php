@@ -2,7 +2,7 @@
 /* XXX change to Singleton class ? */
 class Jason {
     /* config file path */
-    private static $config_file = "config.ini";
+    const config_file = "config.ini";
     /* json data variable */
     private $json;
     /* fields */
@@ -26,7 +26,7 @@ class Jason {
      */
     public function __construct() {
     	try {
-    		$jfile = file_get_contents(self::$config_file);
+    		$jfile = file_get_contents(self::config_file);
     	} catch (Exception $i) {
     		echo 'Exception : ', $e->getMessage(), "\n";
     	}
@@ -98,7 +98,7 @@ class Jason {
      *
      */
     public function writeFile() {
-        file_put_contents(self::$config_file, json_encode($this->json)); 
+        file_put_contents(self::config_file, json_encode($this->json)); 
     }
 
 }

@@ -1,6 +1,6 @@
 <?php
 include_once 'jason.php';
-include_once 'session.php';
+include_once 'utils.php';
 include_once 'error.php';
 include_once 'user.php';
 
@@ -13,7 +13,7 @@ class Menu {
 		if (!Error::none()) {
 			echo '<div id="login_failed">' . Error::get() . '</div>';
 		}
-		if (!isLoggedIn()) {
+		if (!Utils::isLoggedIn()) {
 			echo '<div id="login">
 				<form method="post" action="logPost.php">
 					<input placeholder="user name" type="text" name="username">
@@ -21,13 +21,13 @@ class Menu {
 					<input type="submit" name="login" value="login">
 				</form>';
 		} else {
-			echo '<div id="login">You are logged in as <a href="?page=profile">' . getSession("username") . '</a></div>';
+			echo '<div id="login">You are logged in as <a href="?page=profile">' . Utils::getSession("username") . '</a></div>';
 		}
 	}
 
 	public static function getNavigation() {
 		echo "<ul>";
-		if (isLoggedIn()) {
+		if (Utils::isLoggedIn()) {
 			if (User::getStatus() == UserStatus::Administrator) {
 				echo '<li><a href="?page=administration">Admin</a></li>';
 			}

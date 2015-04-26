@@ -1,8 +1,7 @@
 <?php
-// XXX include more precise error checking.
-// needed for utility functions
+
 include_once 'db.php';
-include_once 'session.php';
+include_once 'utils.php';
 include_once 'error.php';
 include_once 'hash.php';
 include_once 'user.php';
@@ -10,12 +9,12 @@ include_once 'user.php';
 class Log {
     public function __construct() {
         // make sure the user did fill in username and pass
-        $username = handleUsers();
+        $username = Utils::handleUsers();
 
         $db = new db;
         $db->request('SELECT id, username, mail, status FROM users WHERE username = :name AND password = :pass');
         $db->bind(':name', $username);
-        $db->bind(':pass', Hash::get(post('password')));
+        $db->bind(':pass', Hash::get(Utils::post('password')));
         $result = $db->getAssoc();
 
         if (!empty($result)) {

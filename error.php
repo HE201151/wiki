@@ -1,28 +1,28 @@
 <?php
 
-include_once 'session.php';
+include_once 'utils.php';
 
 class Error {
 	public static $err = 'error';
 
 	public static function get() {
-		return getSession(self::$err);
+		return Utils::getSession(self::$err);
 	}
 
 	public static function set($msg) {
-		setSession(self::$err, $msg);
+		Utils::setSession(self::$err, $msg);
 	}
 
 	public static function alliswell() {
-		setSession(self::$err, null);
+		Utils::setSession(self::$err, null);
 	}
 
 	public static function exception(Exception $e) {
-		setSession(self::$err, $e->getMessage());
+		Utils::setSession(self::$err, $e->getMessage());
 	}
 
 	public static function none() {
-		return empty(getSession(self::$err));
+		return empty(Utils::getSession(self::$err));
 	}
 }
 ?>

@@ -44,15 +44,15 @@ class User {
 	}
 
 	public static function getUsername() {
-		return getSession('username');
+		return Utils::getSession('username');
 	}
 
 	public static function getEmail() {
-		return getSession('mail');
+		return Utils::getSession('mail');
 	}
 
 	public static function getStatus() {
-		return getSession('status');
+		return Utils::getSession('status');
 	}
 
 	public static function getStatusDesc() {
@@ -92,7 +92,7 @@ class User {
 	}
 
 	public static function getProfile() {
-		if (!isLoggedin()) {
+		if (!Utils::isLoggedin()) {
 			print '<div id="register">You are either not logged in or do not have permission to view this page.</div>';
 			return;
 		}

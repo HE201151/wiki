@@ -16,37 +16,37 @@
 		</nav>
 		<article>
 			<?php
-			if (page() === "register") {
+			if (Utils::page() === "register") {
 				include_once 'register.php';
 				Register::getRegisterForm();
 
-			} else if (page() === "registerDone") {
+			} else if (Utils::page() === "registerDone") {
 				include_once 'register.php';
 				Register::getSuccessfulRegistrationMessage();
 
-			} else if (page() === "activation") {
+			} else if (Utils::page() === "activation") {
 				include_once 'register.php';
 				Register::activate();
 
-			} else if (page() === "contact") {
+			} else if (Utils::page() === "contact") {
 				include_once 'mail.php';
 				Mail::getContactForm();
 
-			} else if (page() === "contactDone") {
+			} else if (Utils::page() === "contactDone") {
 				include_once 'mail.php';
 				Mail::getSuccessfulContactMessage();
 
-			} else if (page() === "logout") {
+			} else if (Utils::page() === "logout") {
 				include_once 'log.php';
 				Log::logout();
 
-			} else if (page() === "profile") {
+			} else if (Utils::page() === "profile") {
 				include_once 'user.php';
 				User::getProfile();
 
 			} else {
-				if (isLoggedIn()) {
-					echo getSession("status") . '<a href="mailto:'.getSession("mail").'">'.getSession("username").'</a>';
+				if (Utils::isLoggedIn()) {
+					echo Utils::getSession("status") . '<a href="mailto:'. Utils::getSession("mail").'">'. Utils::getSession("username").'</a>';
 				} else {
 					echo "You are not logged in.";
 				}

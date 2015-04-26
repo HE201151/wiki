@@ -58,7 +58,7 @@ class Mail {
 		return filter_var($email, FILTER_VALIDATE_EMAIL);
 	}
 
-	public static function sendMail($to, $from, $subject, $msg) {
+	public static function sendMail($to, $from, $subject, $msg, $html) {
 		if (!self::validateEmail($to)) {
 			throw new Exception('invalid origin email address');
 		}
@@ -71,7 +71,7 @@ class Mail {
 		if (empty($msg)) {
 			throw new Exception('empty message');
 		}
-		$html = Jason::getOnce('msg_allow_html');
+
 		if ($html) {
 			// XXX validate HTML messages to avoid XSS
 			$message = $msg;

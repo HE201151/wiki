@@ -54,7 +54,7 @@
  			?>
 		</article>
 		<footer>
-			<a href="mailto:youri.mout@gmail.com">Youri Mouton, Copyright © 2015.</a>
+			<a href="mailto:youri.mout@gmail.com">Mail Youri Mouton, Copyright © 2015.</a>
 		</footer>
 	</body>
 </html>

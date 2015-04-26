@@ -6,7 +6,7 @@ include_once 'user.php';
 
 class Menu {
 	public static function showBanner() {
-		echo '<div id="banner"><a href="/">' . Jason::getOnce("banner") . "</a></div>";
+		echo '<div id="banner"><a href="index.php">' . Jason::getOnce("banner") . "</a></div>";
 	}
 
 	public static function showLogin() {

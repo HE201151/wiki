@@ -211,9 +211,12 @@ class Register {
 
 	public function sendActivationMail() {
 		$msg = 'Hello, please click on the following link to activate your account:<br />'
-				. '<a href="index.php?page=activation&activationCode=' . $this->getActivationCode() .  '>link</a>';
+				. '<a href="http://' . $_SERVER['SERVER_NAME'] . 
+				dirname($_SERVER["REQUEST_URI"].'?').'/' .
+				 'index.php?page=activation&activationCode=' . $this->getActivationCode() .  '"">link</a>';
 
-		Mail::sendMail($this->email, Jason::getOnce("admin_mail"), 'Account activation', $msg);
+		Mail::sendMail($this->email, Jason::getOnce("admin_mail"), 'Account activation', $msg, true);
+		Error::set($msg);
 	}
 
 	private function insertUser() {

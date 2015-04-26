@@ -122,6 +122,7 @@ class Register {
 		});
 		</script>';
 	}
+	
 	public static function getSuccessfulRegistrationMessage() {
 		print '<div id="register">Registration was successful, please check your email.</div>';
 	}

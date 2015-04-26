@@ -6,7 +6,7 @@ include_once 'error.php';
 
 class Mail {
 	public static function getContactForm() { 
-		print '
+		print self::preSubmitValidation() . '
 		<form id="contact_form" action="mailPost.php" method="POST" enctype="multipart/form-data">
 			<div class="row">
 				<label for="subject">Subject:</label><br />
@@ -27,6 +27,31 @@ class Mail {
 				<input id="submit_button" type="submit" value="Send email" />
 			</div>
 		</form>	';
+	}
+
+	public static function preSubmitValidation() {
+		print '<script>
+		$(function() {
+			$("#contact_form").validate({
+				rules: {
+					subject: "required", 
+					email: {
+						required: true,
+						email: true
+					},
+					message: "required"
+				},
+				messages: {
+					subject: "Please enter a subject",
+					email: {
+						required: "Please provide an email address",
+						email: "Please enter a valid email address"
+					},
+					message: "Please enter a message"
+				}
+			});
+		});
+		</script>';
 	}
 
 	public static function getSuccessfulContactMessage() {

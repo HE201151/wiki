@@ -146,23 +146,23 @@ class Register {
 		
 		$config = new Jason;
 
-		if(strlen($pwd) < $config->get('pwd_min_size')) {
+		if (strlen($pwd) < $config->get('pwd_min_size')) {
 			throw new Exception("Password too short!");
 		}
 
-		if(strlen($pwd) > $config->get('pwd_max_size')) {
+		if (strlen($pwd) > $config->get('pwd_max_size')) {
 			throw new Exception("Password too long!");
 		}
 
-		if(!preg_match("#[0-9]+#", $pwd) ) {
+		if (!preg_match("#[0-9]+#", $pwd) ) {
 			throw new Exception("Password must include at least one number!");
 		}
 
-		if(!preg_match("#[a-z]+#", $pwd) ) {
+		if (!preg_match("#[a-z]+#", $pwd) ) {
 			throw new Exception("Password must include at least one letter!");
 		}
 
-		if(!preg_match("#[A-Z]+#", $pwd) ) {
+		if (!preg_match("#[A-Z]+#", $pwd) ) {
 			throw new Exception("Password must include at least one CAPS!");
 		}
 
@@ -199,7 +199,7 @@ class Register {
 		$this->db->request('INSERT into activations (users_id, activationCode) VALUES (:id, :code);');
 		$this->db->bind(':id', $this->id);
 		$this->db->bind(':code', uniqid());
-		$this->db->exec();
+		$this->db->doquery();
 	}
 
 	public function getActivationCode() {
@@ -223,7 +223,7 @@ class Register {
 		$this->db->bind(':password', $this->password);
 		$this->db->bind(':mail', $this->email);
 		$this->db->bind(':status', UserStatus::Registered);
-		$this->db->exec();
+		$this->db->doquery();
 
 		$this->getUserId();
 
@@ -255,18 +255,18 @@ class Register {
 		$result = $db->getAssoc();
 		if (!empty($result)) {
 			// upgrade user
-			User::changeStatus($result['users_id'], UserStatus::User);
+			User::changeStatus($result['users_id'], UserStatus::Member);
 			self::getSuccessfulActivationMessage();
 
 			// delete activation code
 			$db->request('DELETE FROM activations where users_id = :user');
 			$db->bind(':user', $result['users_id']);
-			$db->exec();
+			$db->doquery();
 
 			// add activation date to user
 			$db->request('UPDATE users SET activated=now() WHERE id = :user');
 			$db->bind(':user', $result['users_id']);
-			$db->exec();
+			$db->doquery();
 		} else {
 			self::getWrongActivationMessage();
 		}

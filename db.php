@@ -50,13 +50,13 @@ class db extends PDO {
         }
 		$this->sth->bindParam($var, $value, $type);
 	}
-	
-	public function exec() {
+
+	public function doquery() {
 		$this->sth->execute();
 	}
 
 	public function getAssoc() {
-		$this->sth->execute();
+		$this->doquery();
 		return $this->sth->fetch(PDO::FETCH_ASSOC);
 	}
 

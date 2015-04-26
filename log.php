@@ -32,7 +32,7 @@ class Log {
             $_SESSION['is_logged_in'] = TRUE;
             $db->request('UPDATE users SET lastconnect=now() WHERE username = :username');
             $db->bind(':username', $_SESSION["username"]);
-            $db->exec();
+            $db->doquery();
         } else {
             Error::set("wrong username or password");
         }

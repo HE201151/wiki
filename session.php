@@ -1,17 +1,8 @@
 <?php	
 	session_start();
 
-	$gid = getGid();
-	$_SESSION['gid'] = $gid;
-
 	function isLoggedIn() {
 		return (getSession('is_logged_in'));
-	}
-
-	function showSession() {
-		echo '<pre>';
-		print_r($_SESSION);
-		echo '</pre>';
 	}
 
 	function isPost($field) {
@@ -51,38 +42,6 @@
 				return 'no password set';
 		} else {
 			return 'no info';
-		}
-	}
-
-	function getGid() {
-		/* the user id can be 0 so don't use isGet() */
-		if (isset($_GET['gid']))
-			return get('gid');
-	}
-
-	/* return human readable permission based on user id */
-	function getPerm() {
-		switch (getGid()) {
-			case -1 : 
-				return 'failed to get user id';
-				break;
-			case 0 : /* god */
-				return 'root';
-				break;
-			case 1 :
-				return 'admin';
-				break;
-			case 2 :
-				return 'mod';
-				break;
-			case 3 : 
-				return 'user';
-				break;
-			case 4 : /* non activated user */
-				return 'registered';
-				break;
-			default:
-				return 'invalid user id';
 		}
 	}
 

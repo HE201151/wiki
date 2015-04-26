@@ -7,7 +7,7 @@ include_once 'error.php';
 class Mail {
 	public static function getContactForm() { 
 		print '
-		<form id="contact_form" action="mail.php" method="POST" enctype="multipart/form-data">
+		<form id="contact_form" action="mailPost.php" method="POST" enctype="multipart/form-data">
 			<div class="row">
 				<label for="subject">Subject:</label><br />
 				<input id="subject" class="input" name="subject" type="text" value="" size="30" /><br />
@@ -52,8 +52,6 @@ class Mail {
 		$headers .= "Content-Type: text/html; charset=ISO-8859-1\r\n";
 
 		mail($to, $subject, $message, $headers);
-
-		header("Location: index.php?page=contactDone");
 	}
 
 	public static function validateEmail($email) {
@@ -92,14 +90,4 @@ class Mail {
 	}
 
 }
-
-if (!empty($_POST) && !empty(post('subject'))) {
-	try {
-		$mail = new Mail();
-		$mail->sendMailFromPost();
-	} catch (Exception $e) {
-		Error::exception($e);
-	}
-}
-
 ?>

@@ -13,7 +13,7 @@
 		}
 		if (!isLoggedIn()) {
 			echo '<div id="login">
-				<form method="post" action="log.php">
+				<form method="post" action="logPost.php">
 					<input placeholder="user name" type="text" name="username">
 					<input placeholder="password" type="password" name="password">
 					<input type="submit" name="login" value="login">

@@ -16,7 +16,7 @@ class Register {
 
 	public static function getRegisterForm() {
 		print '
-		<form id="register" action="register.php" method="post" accept-charset="UTF-8">
+		<form id="register" action="registerPost.php" method="post" accept-charset="UTF-8">
 			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
 			<tbody>
 				<tr>
@@ -202,9 +202,16 @@ class Register {
 		$this->db->exec();
 	}
 
+	public function getActivationCode() {
+		$this->db->request('SELECT activationCode FROM activations where users_id = :id');
+		$this->db->bind(':id', $this->id);
+		$result = $this->db->getAssoc();
+		return $result['activationCode'];
+	}
+
 	public function sendActivationMail() {
 		$msg = 'Hello, please click on the following link to activate your account:<br />'
-				. '<a href="index.php?page=activation&activation=' . $this->id .  '>link</a>';
+				. '<a href="index.php?page=activation&activationCode=' . $this->getActivationCode() .  '>link</a>';
 
 		Mail::sendMail($this->email, Jason::getOnce("admin_mail"), 'Account activation', $msg);
 	}
@@ -244,33 +251,26 @@ class Register {
 	public static function activate() {
 		$db = new db;
 		$db->request('SELECT users_id, activationCode FROM activations WHERE activationCode = :code');
-		$db->bind(':code', get('activation'));
+		$db->bind(':code', get('activationCode'));
 		$result = $db->getAssoc();
 		if (!empty($result)) {
+			// upgrade user
 			User::changeStatus($result['users_id'], UserStatus::User);
 			self::getSuccessfulActivationMessage();
+
+			// delete activation code
 			$db->request('DELETE FROM activations where users_id = :user');
+			$db->bind(':user', $result['users_id']);
+			$db->exec();
+
+			// add activation date to user
+			$db->request('UPDATE users SET activated=now() WHERE id = :user');
 			$db->bind(':user', $result['users_id']);
 			$db->exec();
 		} else {
 			self::getWrongActivationMessage();
 		}
 		$db = null;
-	}
-}
-
-
-/* Submit registration form */
-if (!empty($_POST)) {
-	$newUser = new Register;
-	/* if no errors, go to done page */
-	if (Error::none()) {
-		header("Location: index.php?page=registerDone");
-	/* otherwise go back */
-	} else {
-		print '<script type="text/javascript">'
-   			. 'history.go(-1);'
-   			. '</script>';
 	}
 }
 

@@ -42,8 +42,7 @@
 
 			} else {
 				if (isLoggedIn()) {
-					echo '<a title="'.getSession("mail").'">'.getSession("username").'</a>';
-					echo getSession("mail");
+					echo getSession("user_id") . '<a href="mailto:'.getSession("mail").'">'.getSession("username").'</a>';
 				} else {
 					echo "You are not logged in.";
 				}

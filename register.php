@@ -77,7 +77,7 @@ class Register {
 
 	public function __construct() {
 		try {
-			$this->db = new db();
+			$this->db = new db;
 		} catch (Exception $e) {
 			Error::exception($e);
 			return;
@@ -116,7 +116,7 @@ class Register {
 
 	private function sanitizeUsername() {
 		$this->username = htmlspecialchars(post('name'));
-		$config = new Jason();
+		$config = new Jason;
 		$minSize = $config->get('login_min_size');
 		$maxSize = $config->get('login_max_size');
 
@@ -141,7 +141,32 @@ class Register {
 		if (post('password') !== post('password2')) {
 			throw new Exception('Passwords do not match');
 		}
-		$this->password = Hash::get(post('password'));
+
+		$pwd = post('password');
+		
+		$config = new Jason;
+
+		if(strlen($pwd) < $config->get('pwd_min_size')) {
+			throw new Exception("Password too short!");
+		}
+
+		if(strlen($pwd) > $config->get('pwd_max_size')) {
+			throw new Exception("Password too long!");
+		}
+
+		if(!preg_match("#[0-9]+#", $pwd) ) {
+			throw new Exception("Password must include at least one number!");
+		}
+
+		if(!preg_match("#[a-z]+#", $pwd) ) {
+			throw new Exception("Password must include at least one letter!");
+		}
+
+		if(!preg_match("#[A-Z]+#", $pwd) ) {
+			throw new Exception("Password must include at least one CAPS!");
+		}
+
+		$this->password = Hash::get($pwd);
 	}
 
 	private function checkEmail() {
@@ -177,9 +202,9 @@ class Register {
 		$this->db->exec();
 	}
 
-	private function sendActivationMail() {
+	public function sendActivationMail() {
 		$msg = 'Hello, please click on the following link to activate your account:<br />'
-				. '<a href="index.php?page=activation&activation=' . $this->id .  '</a>';
+				. '<a href="index.php?page=activation&activation=' . $this->id .  '>link</a>';
 
 		Mail::sendMail($this->email, Jason::getOnce("admin_mail"), 'Account activation', $msg);
 	}
@@ -204,6 +229,14 @@ class Register {
 		return $this->id;
 	}
 
+	public function setEmail($email) {
+		$this->email = $email;
+	}
+
+	public function setId($id) {
+		$this->id = $id;
+	}
+
 	public function getUsername() {
 		return $this->username;
 	}
@@ -214,8 +247,11 @@ class Register {
 		$db->bind(':code', get('activation'));
 		$result = $db->getAssoc();
 		if (!empty($result)) {
-			User::elevate($result['users_id'], UserStatus::User);
+			User::changeStatus($result['users_id'], UserStatus::User);
 			self::getSuccessfulActivationMessage();
+			$db->request('DELETE FROM activations where users_id = :user');
+			$db->bind(':user', $result['users_id']);
+			$db->exec();
 		} else {
 			self::getWrongActivationMessage();
 		}

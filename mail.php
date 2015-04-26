@@ -93,7 +93,7 @@ class Mail {
 
 }
 
-if (isPost('subject')) {
+if (!empty($_POST) && !empty(post('subject'))) {
 	try {
 		$mail = new Mail();
 		$mail->sendMailFromPost();

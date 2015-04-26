@@ -12,7 +12,7 @@ class Log {
         $username = handleUsers();
 
         $db = new db;
-        $db->request('SELECT username, mail FROM users WHERE username = :name AND password = :pass');
+        $db->request('SELECT id, username, mail FROM users WHERE username = :name AND password = :pass');
         $db->bind(':name', $username);
         $db->bind(':pass', Hash::get(post('password')));
         $result = $db->getAssoc();
@@ -20,6 +20,7 @@ class Log {
         if (!empty($result)) {
             $_SESSION["username"] = $result['username'];
             $_SESSION["mail"] = $result['mail'];
+            $_SESSION["user_id"] = $result['id'];
             Error::alliswell();
             $_SESSION['is_logged_in'] = TRUE;
             $db->request('UPDATE users SET lastconnect=now() WHERE username = :username');
@@ -31,7 +32,6 @@ class Log {
     }
 
     public static function logout() {
-        session_start();
         $_SESSION = array();
         session_unset();
         session_destroy();

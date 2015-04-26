@@ -211,3 +211,8 @@ div#login_failed {
     font-size: 15px;
     padding: 5px;
 }
+
+.error {
+    color: #E53935;
+    font-size: 13px;
+}

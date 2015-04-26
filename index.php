@@ -1,8 +1,10 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-		<title>PHP Test</title>
-		<link rel="stylesheet" type="text/css" href="global.css" />
+		<title>Projet PMM</title>
+		<link rel="stylesheet" type="text/css" href="css/global.css" />
+		<script src="js/jquery-1.11.2.min.js"></script>
+		<script src="js/jquery.validate.min.js"></script>
 	</head>
 	<body>
 		<?php

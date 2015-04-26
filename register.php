@@ -15,12 +15,12 @@ class Register {
 	private $db;
 
 	public static function getRegisterForm() {
-		print '
-		<form id="register" action="registerPost.php" method="post" accept-charset="UTF-8">
+		print self::preSubmitValidation() . 
+		'<form id="register" action="registerPost.php" method="post" accept-charset="UTF-8">
 			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
 			<tbody>
 				<tr>
-					<td id="regtitle">Registration</td>
+					<td id="regtitle">Registration - All fields required</td>
 				</tr>
 				<tr id="formcontent">
 					<td>
@@ -31,23 +31,23 @@ class Register {
 										<td>Username:</td>
 									</tr>
 									<tr>
-										<td colspan="2"><input type="text" name="name" id="name" maxlength="50" style="width: 100%" value="" /></td>
+										<td colspan="2"><input type="text" name="username" id="username" maxlength="50" style="width: 100%" value="" required/></td>
 									</tr>
 									<tr>
 										<td><span class="smalltext">Password:</span></td>
 										<td><span class="smalltext">Confirm Password:</span></td>
 									</tr>
 									<tr>
-										<td><input type="password" name="password" id="password" maxlength="50" style="width: 100%" /></td>
-										<td><input type="password" name="password2" id="password2" maxlength="50" style="width: 100%" /></td>
+										<td><input type="password" name="password" id="password" maxlength="50" style="width: 100%" required/></td>
+										<td><input type="password" name="password2" id="password2" maxlength="50" style="width: 100%" required/></td>
 									</tr>
 									<tr>
 										<td><span class="smalltext"><label for="email">Email:</label></span></td>
 										<td><span class="smalltext"><label for="email2">Confirm Email:</label></span></td>
 									</tr>
 									<tr>
-										<td><input type="text" name="email" id="email" maxlength="50" style="width: 100%" value="" /></td>
-										<td><input type="text" name="email2" id="email2" maxlength="50" style="width: 100%" value="" /></td>
+										<td><input type="text" name="email" id="email" maxlength="50" style="width: 100%" value="" required/></td>
+										<td><input type="text" name="email2" id="email2" maxlength="50" style="width: 100%" value="" required/></td>
 									</tr>
 								</tbody>
 							</table>
@@ -63,6 +63,65 @@ class Register {
 		</form>';
 	}
 
+	public static function preSubmitValidation() {
+		print '<script>
+		$(function() {
+			$("#register").validate({
+				rules: {
+					username: {
+						required: true,
+						minlength: 2,
+						maxlength: 25
+					},
+					password: {
+						required: true,
+						minlength: 6,
+						maxlength: 64
+					},
+					password2: {
+						required: true,
+						minlength: 6,
+						maxlength: 64,
+						equalTo: "#password"
+					},
+					email: {
+						required: true,
+						email: true
+					},
+					email2: {
+						required: true,
+						email: true,
+						equalTo: "#email"
+					}
+				},
+				messages: {
+					username: {
+						required: "Please enter a username",
+						minLength: "Your username must consist of at least 2 characters",
+						maxLength: "Your username must not exceed 25 characters"
+					},
+					password: {
+						required: "Please provide a password",
+						minLength: "Your password must be at least 6 characters",
+						maxLength: "Your password must not exceed 64 characters"
+					},
+					password2: {
+						required: "Please confirm your password",
+						equalTo: "The passwords do not match"
+					},
+					email: {
+						required: "Please provide a email address",
+						email: "Please enter a valid email address"
+					},
+					email2: {
+						required: "Please confirm your email",
+						equalTo: "The emails do not match"
+					}
+				}
+			});
+		});
+		</script>';
+	}
 	public static function getSuccessfulRegistrationMessage() {
 		print '<div id="register">Registration was successful, please check your email.</div>';
 	}
@@ -115,7 +174,7 @@ class Register {
 	}
 
 	private function sanitizeUsername() {
-		$this->username = htmlspecialchars(Utils::post('name'));
+		$this->username = htmlspecialchars(Utils::post('username'));
 		$config = new Jason;
 		$minSize = $config->get('login_min_size');
 		$maxSize = $config->get('login_max_size');

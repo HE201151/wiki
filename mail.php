@@ -10,18 +10,18 @@ class Mail {
 		<form id="contact_form" action="mailPost.php" method="POST" enctype="multipart/form-data">
 			<div class="row">
 				<label for="subject">Subject:</label><br />
-				<input id="subject" class="input" name="subject" type="text" value="" size="30" /><br />
+				<input id="subject" class="input" name="subject" type="text" value="" size="30" required/><br />
 			</div>';
 
 		print (!Utils::isLoggedIn()) ? 
 				'<div class="row">
 					<label for="email">Your email:</label><br />
-					<input colspan="2" id="email" class="input" name="email" type="text" value="" size="30" /><br />
+					<input colspan="2" id="email" class="input" name="email" type="text" value="" size="30" required/><br />
 				</div>'	: '';
 
 		print '<div class="row">
 				<label for="message">Your message:</label><br />
-				<textarea id="message" class="input" name="message" rows="7" cols="30"></textarea><br />
+				<textarea id="message" class="input" name="message" rows="7" cols="30" required></textarea><br />
 			</div>
 			<div align="center" id="submit">
 				<input id="submit_button" type="submit" value="Send email" />

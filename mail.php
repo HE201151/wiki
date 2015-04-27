@@ -1,8 +1,10 @@
 <?php
 
+include_once 'db.php';
 include_once 'utils.php';
 include_once 'jason.php';
 include_once 'error.php';
+include_once 'user.php';
 
 class Mail {
 	public static function getContactForm() { 
@@ -79,6 +81,22 @@ class Mail {
 		$headers .= "Content-Type: text/" . $html ? "html" : "plain" . "; charset=ISO-8859-1\r\n";
 
 		mail($to, $subject, $message, $headers);
+
+		/* insert message into db */
+		$db = new db;
+		$db->request('INSERT INTO messages (subject, email, user_id) VALUES (:subject, :email, :user_id);');
+		$db->bind(':subject', $subject);
+		$db->bind(':email', $from);
+		$db->bind(':user_id', (!empty(User::getUserId())) ?: null);
+		
+		try {
+			$db->doquery();
+		} catch (Exception $e) {
+			die($e->getMessage());
+		}
+
+		$db = null;
+		Error::alliswell();
 	}
 
 	public static function validateEmail($email) {

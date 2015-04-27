@@ -64,25 +64,28 @@ class Register {
 	}
 
 	public static function preSubmitValidation() {
+		$config = new Jason;
+		$username_minlength = $config->get('login_min_size');
+		$username_maxlength = $config->get('login_max_size');
+		$pwd_minlength = $config->get('pwd_min_size');
+		$pwd_maxlength = $config->get('pwd_max_size');
 		print '<script>
 		$(function() {
 			$("#register").validate({
 				rules: {
 					username: {
 						required: true,
-						minlength: 2,
-						maxlength: 25
+						minlength: ' . $username_minlength . ',
+						maxlength: ' . $username_maxlength . '
 					},
 					password: {
 						required: true,
-						minlength: 6,
-						maxlength: 64,
+						minlength: ' . $pwd_minlength . ',
+						maxlength: ' . $pwd_maxlength . ',
 						check_password: true
 					},
 					password2: {
 						required: true,
-						minlength: 6,
-						maxlength: 64,
 						equalTo: "#password"
 					},
 					email: {
@@ -284,7 +287,6 @@ class Register {
 				 'index.php?page=activation&activationCode=' . $this->getActivationCode() .  '"">link</a>';
 
 		Mail::sendMail($this->email, Jason::getOnce("admin_mail"), 'Account activation', $msg, true);
-		Error::set($msg);
 	}
 
 	private function insertUser() {

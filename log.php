@@ -22,6 +22,7 @@ class Log {
                 Error::set("This user has not yet activated, please click the link in the email sent after registration.");
                 return;
             }
+            // XXX use setSession
             $_SESSION["username"] = $result['username'];
             $_SESSION["mail"] = $result['mail'];
             $_SESSION["user_id"] = $result['id'];

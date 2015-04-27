@@ -55,6 +55,10 @@ class User {
 		return Utils::getSession('status');
 	}
 
+	public static function getUserId() {
+		return Utils::getSession('user_id');
+	}
+	
 	public static function getStatusDesc() {
 		switch (self::getStatus()) {
 			case UserStatus::Administrator :

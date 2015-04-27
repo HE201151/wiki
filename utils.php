@@ -1,6 +1,9 @@
 <?php	
 
+include_once 'jason.php';
+
 // access session variables
+session_name(Jason::getOnce('session_name'));
 session_start();
 
 class Utils {

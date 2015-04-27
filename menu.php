@@ -23,6 +23,9 @@ class Menu {
 		} else {
 			echo '<div id="login">You are logged in as <a href="?page=profile">' . Utils::getSession("username") . '</a></div>';
 		}
+
+		// reset errors
+		Error::alliswell();
 	}
 
 	public static function getNavigation() {

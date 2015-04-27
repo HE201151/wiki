@@ -9,7 +9,7 @@ include_once 'user.php';
 class Mail {
 	public static function getContactForm() { 
 		print self::preSubmitValidation() . '
-		<form id="contact_form" action="mailPost.php" method="POST" enctype="multipart/form-data">
+		<form id="contact_form" action="post.php?action=message" method="POST" enctype="multipart/form-data">
 			<div class="row">
 				<label for="subject">Subject:</label><br />
 				<input id="subject" class="input" name="subject" type="text" value="" size="30" required/><br />

@@ -15,7 +15,7 @@ class Menu {
 		}
 		if (!Utils::isLoggedIn()) {
 			echo '<div id="login">
-				<form method="post" action="logPost.php">
+				<form method="post" action="post.php?action=login">
 					<input placeholder="user name" type="text" name="username">
 					<input placeholder="password" type="password" name="password">
 					<input type="submit" name="login" value="login">
@@ -24,12 +24,12 @@ class Menu {
 			echo '<div id="login">You are logged in as <a href="?page=profile">' . Utils::getSession("username") . '</a></div>';
 		}
 
-		// reset errors
 		Error::alliswell();
 	}
 
 	public static function getNavigation() {
 		echo "<ul>";
+		echo '<li><a href="index.php">Home</a></li>';
 		if (Utils::isLoggedIn()) {
 			if (User::getStatus() == UserStatus::Administrator) {
 				echo '<li><a href="?page=administration">Admin</a></li>';

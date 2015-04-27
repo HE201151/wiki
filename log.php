@@ -1,5 +1,6 @@
 <?php
 
+// XXX use functions from user.php
 include_once 'db.php';
 include_once 'utils.php';
 include_once 'error.php';

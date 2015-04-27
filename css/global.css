@@ -216,3 +216,15 @@ div#login_failed {
     color: #E53935!important;
     font-size: 13px;
 }
+
+#register a {
+    text-decoration: none;
+    color: #82B1FF;
+    transition:  border-bottom .1s ease-in-out;
+    padding-bottom: 2px;
+    border-bottom: 2px solid transparent;
+}
+
+#register a:hover {
+    border-bottom: 2px solid white;
+}

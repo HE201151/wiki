@@ -1,9 +1,11 @@
 <?php
-	include_once 'db.php';
-	include_once 'error.php';
-	include_once 'hash.php';
-	include_once 'mail.php';
-	include_once 'user.php';
+
+// XXX use functions from user.php
+include_once 'db.php';
+include_once 'error.php';
+include_once 'hash.php';
+include_once 'mail.php';
+include_once 'user.php';
 
 class Register {
 	private $id;
@@ -16,7 +18,7 @@ class Register {
 
 	public static function getRegisterForm() {
 		print self::preSubmitValidation() . 
-		'<form id="register" action="registerPost.php" method="post" accept-charset="UTF-8">
+		'<form id="register" action="post.php?action=register" method="post" accept-charset="UTF-8">
 			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
 			<tbody>
 				<tr>
@@ -303,22 +305,6 @@ class Register {
 		$this->insertActivationCode();
 
 		$this->sendActivationMail();
-	}
-
-	public function getId() {
-		return $this->id;
-	}
-
-	public function setEmail($email) {
-		$this->email = $email;
-	}
-
-	public function setId($id) {
-		$this->id = $id;
-	}
-
-	public function getUsername() {
-		return $this->username;
 	}
 
 	public static function activate() {

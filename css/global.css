@@ -213,6 +213,6 @@ div#login_failed {
 }
 
 .error {
-    color: #E53935;
+    color: #E53935!important;
     font-size: 13px;
 }

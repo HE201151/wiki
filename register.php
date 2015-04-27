@@ -76,7 +76,8 @@ class Register {
 					password: {
 						required: true,
 						minlength: 6,
-						maxlength: 64
+						maxlength: 64,
+						check_password: true
 					},
 					password2: {
 						required: true,
@@ -103,7 +104,8 @@ class Register {
 					password: {
 						required: "Please provide a password",
 						minLength: "Your password must be at least 6 characters",
-						maxLength: "Your password must not exceed 64 characters"
+						maxLength: "Your password must not exceed 64 characters",
+						check_password: "Password must contain a number and an uppercase letter"
 					},
 					password2: {
 						required: "Please confirm your password",
@@ -119,10 +121,16 @@ class Register {
 					}
 				}
 			});
+
+			$.validator.addMethod("check_password", function(value) {
+			   return /^[A-Za-z0-9\d=!\-@._*]*$/.test(value) 
+			       && /[A-Z]/.test(value) // uppercase letter
+			       && /\d/.test(value) // number
+			});
 		});
 		</script>';
 	}
-	
+
 	public static function getSuccessfulRegistrationMessage() {
 		print '<div id="register">Registration was successful, please check your email.</div>';
 	}

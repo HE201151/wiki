@@ -66,7 +66,7 @@ class Mail {
 		if (!Utils::isLoggedIn()) {
 			$from = Utils::post("email");
 		} else {
-			$from = Utils::getSession("mail");
+			$from = Utils::getSession("email");
 		}
 
 		$html = Jason::getOnce('msg_allow_html');

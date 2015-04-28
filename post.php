@@ -17,7 +17,7 @@ if (!empty($_POST)) {
 				Utils::setSession('username', Utils::post('username'));
 				Error::set('Username changed successfully.');
 			} catch (Exception $e) {
-				Error::Exception($e);
+				Error::exception($e);
 			} finally {
 				print '<script type="text/javascript">'
 						. 'history.go(-1);'
@@ -25,6 +25,37 @@ if (!empty($_POST)) {
 			}
 			break;
 
+
+		case 'changePassword' :
+			try {
+				User::checkPassword(User::getUsername(), Utils::post('password'));
+				User::checkNewPassword();
+				User::updatePassword(Utils::post('newpassword'));
+				Error::set('Password changed successfully.');
+			} catch (Exception $e) {
+				Error::exception($e);
+			} finally {
+				print '<script type="text/javascript">'
+						. 'history.go(-1);'
+						. '</script>';
+			}
+			break;
+
+		case 'changeEmail' :
+			try {
+				User::checkPassword(User::getUsername(), Utils::post('password'));
+				User::checkNewEmail();
+				User::updateEmail(Utils::post('email'));
+				Utils::setSession('email', Utils::post('email'));
+				Error::set('Email changed successfully.');
+			} catch (Exception $e) {
+				Error::exception($e);
+			} finally {
+				print '<script type="text/javascript">'
+						. 'history.go(-1);'
+						. '</script>';
+			}
+			break;
 
 		case 'message' : 
 			try {
@@ -56,7 +87,7 @@ if (!empty($_POST)) {
 			}
 			break;
 
-			
+
 		default : 
 			print 'unknown action.';
 	}

@@ -23,16 +23,15 @@ class Log {
                 Error::set("This user has not yet activated, please click the link in the email sent after registration.");
                 return;
             }
-            // XXX use setSession
-            $_SESSION["username"] = $result['username'];
-            $_SESSION["mail"] = $result['mail'];
-            $_SESSION["user_id"] = $result['id'];
-            $_SESSION["status"] = $result['status'];
+            Utils::setSession("username", $result['username']);
+            Utils::setSession("email", $result['mail']);
+            Utils::setSession("user_id", $result['id']);
+            Utils::setSession("status", $result['status']);
             Error::alliswell();
 
-            $_SESSION['is_logged_in'] = TRUE;
+            Utils::setSession('is_logged_in', true);
             $db->request('UPDATE users SET lastconnect=now() WHERE username = :username');
-            $db->bind(':username', $_SESSION["username"]);
+            $db->bind(':username', Utils::getSession("username"));
             $db->doquery();
         } else {
             Error::set("wrong username or password");

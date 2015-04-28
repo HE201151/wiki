@@ -51,7 +51,7 @@ class User {
 	}
 
 	public static function getEmail() {
-		return Utils::getSession('mail');
+		return Utils::getSession('email');
 	}
 
 	public static function getStatus() {
@@ -119,6 +119,7 @@ class User {
 		if (!empty($userExists)) {
 			throw new Exception('Username is already used');
 		}
+		$db = null;
 	}
 
 	public static function updateUsername($username) {
@@ -127,6 +128,25 @@ class User {
 		$db->bind(':oldusername', self::getUsername());
 		$db->bind(':newusername', $username);
 		$db->doquery();
+		$db = null;
+	}
+
+	public static function updatePassword($pwd) {
+		$db = new db;
+		$db->request('UPDATE users set password = :newpassword WHERE password = :oldpassword;');
+		$db->bind(':oldpassword', Hash::get(Utils::post('password')));
+		$db->bind(':newpassword', Hash::get($pwd));
+		$db->doquery();
+		$db = null;
+	}
+
+	public static function updateEmail($email) {
+		$db = new db;
+		$db->request('UPDATE users SET mail = :newmail WHERE mail = :oldmail');
+		$db->bind(':oldmail', self::getEmail());
+		$db->bind(':newmail', $email);
+		$db->doquery();
+		$db = null;
 	}
 
 	public static function checkPassword($username, $pass) {
@@ -139,6 +159,7 @@ class User {
         if (empty($result)) {
         	throw new Exception("Wrong Password");
         }
+        $db = null;
 	}
 
 	public static function validateLoginChangeForm() {
@@ -170,6 +191,82 @@ class User {
 		});
 		</script>';
 	}
+
+	public static function validatePasswordChangeForm() {
+		$config = new Jason;
+		$pwd_minlength = $config->get('pwd_min_size');
+		$pwd_maxlength = $config->get('pwd_max_size');
+		print '<script>
+		$(function() {
+			$("#register").validate({
+				rules: {
+					password: "required",
+					newpassword: {
+						required: true,
+						minlength: ' . $pwd_minlength . ',
+						maxlength: ' . $pwd_maxlength . ',
+						check_password: true
+					},
+					newpassword2: {
+						required: true,
+						equalTo: "#newpassword"
+					},
+				},
+				messages: {
+					password: "Please provide a password",
+					newpassword: {
+						required: "Please provide a password",
+						minLength: "Your password must be at least ' . $pwd_minlength . ' characters",
+						maxLength: "Your password must not exceed ' . $pwd_maxlength . ' characters",
+						check_password: "Password must contain a number and an uppercase letter"
+					},
+					newpassword2: {
+						required: "Please confirm your password",
+						equalTo: "The passwords do not match"
+					},
+				}
+			});
+			$.validator.addMethod("check_password", function(value) {
+			   return /^[A-Za-z0-9\d=!\-@._*]*$/.test(value) 
+			       && /[A-Z]/.test(value) // uppercase letter
+			       && /\d/.test(value) // number
+			});
+		});
+		</script>';
+	}
+
+	public static function validateEmailChange() {
+		print '<script>
+		$(function() {
+			$("#register").validate({
+				rules: {
+					password: "required",
+					email: {
+						required: true,
+						email: true
+					},
+					email2: {
+						required: true,
+						email: true,
+						equalTo: "#email"
+					}
+				},
+				messages: {
+					username: "Please enter a username",
+					email: {
+						required: "Please provide a email address",
+						email: "Please enter a valid email address"
+					},
+					email2: {
+						required: "Please confirm your email",
+						equalTo: "The emails do not match"
+					}
+				}
+			});
+		});
+		</script>';
+	}
+
 	public static function getLoginChangeForm() {
 		print '<form id="register" action="post.php?action=changeLogin" method="post" accept-charset="UTF-8">
 			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
@@ -207,7 +304,137 @@ class User {
 			</div>
 			</form>';
 		self::validateLoginChangeForm();
+	}
 
+	public static function getPasswordChangeForm() {
+		print '<form id="register" action="post.php?action=changePassword" method="post" accept-charset="UTF-8">
+			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
+			<tbody>
+				<tr>
+					<td id="regtitle">User Password Change</td>
+				</tr>
+				<tr id="formcontent">
+					<td>
+						<fieldset>
+							<table cellpadding="6" cellspacing="0" width=100%>
+								<tbody>
+									<tr> 
+										<td>Current Password:</td>
+									</tr>
+									<tr>
+										<td colspan="2"><input type="password" name="password" id="password" maxlength="50" style="width: 100%" required/></td>
+									</tr>
+									<tr>
+										<td><span class="smalltext">New Password:</span></td>
+										<td><span class="smalltext">Confirm New Password:</span></td>
+									</tr>
+									<tr>
+										<td><input type="password" name="newpassword" id="newpassword" maxlength="50" style="width: 100%" required/></td>
+										<td><input type="password" name="newpassword2" id="newpassword2" maxlength="50" style="width: 100%" required/></td>
+									</tr>
+								</tbody>
+							</table>
+						</fieldset>
+					</td>
+				</tr>
+			</tbody>
+			</table>
+						<br />
+			<div id="submit" align="center">
+				<input type="submit" name="Submit" value="Submit password change!" />
+			</div>
+			</form>';
+		self::validatePasswordChangeForm();
+	}
+
+	public static function getEmailChangeForm() {
+		print '<form id="register" action="post.php?action=changeEmail" method="post" accept-charset="UTF-8">
+			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
+			<tbody>
+				<tr>
+					<td id="regtitle">User Email Change</td>
+				</tr>
+				<tr id="formcontent">
+					<td>
+						<fieldset>
+							<table cellpadding="6" cellspacing="0" width=100%>
+								<tbody>
+									<tr>
+										<td>Password:</td>
+									</tr>
+									<tr>
+										<td colspan="2"><input type="password" name="password" id="password" maxlength="50" style="width: 100%" required/></td>
+									</tr>
+									<tr>
+										<td><span class="smalltext"><label for="email">Email:</label></span></td>
+										<td><span class="smalltext"><label for="email2">Confirm Email:</label></span></td>
+									</tr>
+									<tr>
+										<td><input type="text" name="email" id="email" maxlength="50" style="width: 100%" value="" required/></td>
+										<td><input type="text" name="email2" id="email2" maxlength="50" style="width: 100%" value="" required/></td>
+									</tr>
+								</tbody>
+							</table>
+						</fieldset>
+					</td>
+				</tr>
+			</tbody>
+			</table>
+			<br />
+			<div id="submit" align="center">
+				<input type="submit" name="Submit" value="Submit email change!" />
+			</div>
+		</form>';
+		self::validateEmailChange();
+	}
+
+	public static function checkNewPassword() {
+		if (Utils::post('newpassword') !== Utils::post('newpassword2')) {
+			throw new Exception('Passwords do not match');
+		}
+
+		$pwd = Utils::post('newpassword');
+		
+		$config = new Jason;
+
+		if (strlen($pwd) < $config->get('pwd_min_size')) {
+			throw new Exception("Password too short!");
+		}
+
+		if (strlen($pwd) > $config->get('pwd_max_size')) {
+			throw new Exception("Password too long!");
+		}
+
+		if (!preg_match("#[0-9]+#", $pwd) ) {
+			throw new Exception("Password must include at least one number!");
+		}
+
+		if (!preg_match("#[a-z]+#", $pwd) ) {
+			throw new Exception("Password must include at least one letter!");
+		}
+
+		if (!preg_match("#[A-Z]+#", $pwd) ) {
+			throw new Exception("Password must include at least one CAPS!");
+		}
+	}
+
+	public static function checkNewEmail() {
+		if (!Mail::validateEmail(Utils::post('email'))) {
+			throw new Exception('Invalid email address');
+		}
+		if (strcmp(Utils::post('email'), Utils::post('email2')) !== 0) {
+			throw new Exception('Emails do not match');
+		}
+
+		// Check if email is already used
+		$db = new db;
+		$db->request('SELECT 1 FROM users WHERE mail = :mail');
+		$db->bind(':mail', Utils::post('email'));
+		$emailExists = $db->getAssoc();
+		if (!empty($emailExists)) {
+			throw new Exception('Email is already used');
+		}
+		$db = null;
 	}
 
 	public static function getProfile() {
@@ -217,9 +444,18 @@ class User {
 		}
 
 		if (Utils::isGet('action')) {
-			if (Utils::get('action') === "changeLogin") {
-				self::getLoginChangeForm();
-				return;
+			switch (Utils::get('action')) {
+				case "changeLogin" :
+					self::getLoginChangeForm();
+					return;
+				
+				case "changePassword" :
+					self::getPasswordChangeForm();
+					return;
+
+				case "changeEmail" :
+					self::getEmailChangeForm();
+					return;
 			}
 		}
 		

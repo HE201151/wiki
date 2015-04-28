@@ -22,6 +22,8 @@ abstract class UserStatus {
 
 	const canChangePassword = [ self::Administrator, self::Moderator, self::User,
 								self::Froze, self::Reactivation ];
+
+	const canEditProfile = [ self::Administrator, self::Moderator, self::Member ];
 }
 
 class User {
@@ -32,6 +34,8 @@ class User {
 		$db->bind(':id', $id);
 		$db->doquery();
 		$db = null;
+
+		Utils::setSession("status", $status);
 	}
 
 	public static function canConnect() {
@@ -44,6 +48,10 @@ class User {
 
 	public static function canChangePassword() {
 		return array_key_exists(self::getStatus(), UserStatus::canChangePassword);
+	}
+
+	public static function canEditProfile() {
+		return array_key_exists(self::getStatus(), UserStatus::canEditProfile);
 	}
 
 	public static function getUsername() {
@@ -142,11 +150,36 @@ class User {
 
 	public static function updateEmail($email) {
 		$db = new db;
+
+		// update email
 		$db->request('UPDATE users SET mail = :newmail WHERE mail = :oldmail');
 		$db->bind(':oldmail', self::getEmail());
 		$db->bind(':newmail', $email);
 		$db->doquery();
+
+		// insert new activation code
+		$db->request('INSERT into activations (users_id, activationCode) VALUES (:id, :code);');
+		$db->bind(':id', User::getUserId());
+		$db->bind(':code', uniqid());
+		$db->doquery();
+
+		// get new activation code
+		$db->request('SELECT activationCode FROM activations where users_id = :id');
+		$db->bind(':id', User::getUserId());
+		$result = $db->getAssoc();
+		$activationCode = $result['activationCode'];
 		$db = null;
+
+		// change user status XXX combine status for ex. admin changing email
+		User::changeStatus(User::getUserId(), UserStatus::Reactivation);
+
+		// send reactivation mail
+		$msg = 'Hello, please click on the following link to reactivate your account:<br />'
+				. '<a href="http://' . $_SERVER['SERVER_NAME'] . 
+				dirname($_SERVER["REQUEST_URI"].'?').'/' .
+				 'index.php?page=activation&activationCode=' . $activationCode .  '"">link</a>';
+
+		Mail::sendMail($email, Jason::getOnce("admin_mail"), 'Account reactivation', $msg, true);
 	}
 
 	public static function checkPassword($username, $pass) {
@@ -492,7 +525,10 @@ class User {
 							</table>
 						</fieldset>
 					</td>
-				</tr>
+				</tr> ';
+
+				if (self::canEditProfile()) {
+					print '
 				<tr>
 					<tr>
 						<td id="regtitle">Edit User Profile</td>
@@ -513,9 +549,10 @@ class User {
 							</tr>
 						</td>
 					</tr>
-				</tr>
-			</tbody>
+				</tr> ';
+			print '</tbody>
 			</table>';
+		}
 	}
 }
 ?>

@@ -47,7 +47,7 @@ if (!empty($_POST)) {
 				User::checkNewEmail();
 				User::updateEmail(Utils::post('email'));
 				Utils::setSession('email', Utils::post('email'));
-				Error::set('Email changed successfully.');
+				Error::set('Email changed successfully, please click on the reactivation link sent to the new email.');
 			} catch (Exception $e) {
 				Error::exception($e);
 			} finally {

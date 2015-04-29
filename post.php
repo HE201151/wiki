@@ -19,9 +19,7 @@ if (!empty($_POST)) {
 			} catch (Exception $e) {
 				Error::exception($e);
 			} finally {
-				print '<script type="text/javascript">'
-						. 'history.go(-1);'
-						. '</script>';
+				Utils::goBack();
 			}
 			break;
 
@@ -35,9 +33,7 @@ if (!empty($_POST)) {
 			} catch (Exception $e) {
 				Error::exception($e);
 			} finally {
-				print '<script type="text/javascript">'
-						. 'history.go(-1);'
-						. '</script>';
+				Utils::goBack();
 			}
 			break;
 
@@ -51,15 +47,27 @@ if (!empty($_POST)) {
 			} catch (Exception $e) {
 				Error::exception($e);
 			} finally {
-				print '<script type="text/javascript">'
-						. 'history.go(-1);'
-						. '</script>';
+				Utils::goBack();
+			}
+			break;
+
+		case 'changeAvatar' :
+			try {
+				User::checkPassword(User::getUsername(), Utils::post('password'));
+				User::checkAvatar();
+				// XXX handle avatar names
+				User::updateAvatar();
+				Error::set('Avatar changed sucessfully.');
+			} catch (Exception $e) {
+				Error::exception($e);
+			} finally {
+				Utils::goBack();
 			}
 			break;
 
 		case 'message' : 
 			try {
-				$mail = new Mail();
+				$mail = new Mail;
 				$mail->sendMailFromPost();
 				header("Location: index.php?page=contactDone");
 			} catch (Exception $e) {
@@ -76,14 +84,10 @@ if (!empty($_POST)) {
 
     	case 'register' :
     		$newUser = new Register;
-			/* if no errors, go to done page */
 			if (Error::none()) {
 				header("Location: index.php?page=registerDone");
-			/* otherwise go back */
 			} else {
-				print '<script type="text/javascript">'
-		   			. 'history.go(-1);'
-		   			. '</script>';
+				Utils::goBack();
 			}
 			break;
 

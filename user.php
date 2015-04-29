@@ -70,6 +70,10 @@ class User {
 		return Utils::getSession('user_id');
 	}
 
+	public static function getAvatar() {
+		return Utils::getSession('avatar');
+	}
+
 	public static function getStatusDesc() {
 		switch (self::getStatus()) {
 			case UserStatus::Administrator :
@@ -164,7 +168,7 @@ class User {
 		$db->doquery();
 
 		// get new activation code
-		$db->request('SELECT activationCode FROM activations where users_id = :id');
+		$db->request('SELECT activationCode FROM activations WHERE users_id = :id');
 		$db->bind(':id', User::getUserId());
 		$result = $db->getAssoc();
 		$activationCode = $result['activationCode'];
@@ -180,6 +184,15 @@ class User {
 				 'index.php?page=activation&activationCode=' . $activationCode .  '"">link</a>';
 
 		Mail::sendMail($email, Jason::getOnce("admin_mail"), 'Account reactivation', $msg, true);
+	}
+
+	public static function updateAvatar() {
+		$db = new db;
+		$db->request('UPDATE users SET avatar = :avatar WHERE id = :id');
+		$db->bind(':avatar', self::getAvatar());
+		$db->bind(':id', self::getUserId());
+		$db->doquery();
+		$db = null;
 	}
 
 	public static function checkPassword($username, $pass) {
@@ -285,7 +298,7 @@ class User {
 					}
 				},
 				messages: {
-					username: "Please enter a username",
+					password: "Please enter your password",
 					email: {
 						required: "Please provide a email address",
 						email: "Please enter a valid email address"
@@ -294,6 +307,21 @@ class User {
 						required: "Please confirm your email",
 						equalTo: "The emails do not match"
 					}
+				}
+			});
+		});
+		</script>';
+	}
+
+	public static function validateAvatarChange() {
+		print '<script>
+		$(function() {
+			$("#register").validate({
+				rules: {
+					password: "required"
+				},
+				messages: {
+					password: "Please enter a username"
 				}
 			});
 		});
@@ -421,6 +449,45 @@ class User {
 		self::validateEmailChange();
 	}
 
+	public static function getAvatarChangeForm() {
+		print '<form id="register" action="post.php?action=changeAvatar" method="post" enctype="multipart/form-data" accept-charset="UTF-8">
+			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
+			<tbody>
+				<tr>
+					<td id="regtitle">User Avatar Change</td>
+				</tr>
+				<tr id="formcontent">
+					<td>
+						<fieldset>
+							<table cellpadding="6" cellspacing="0" width=100%>
+								<tbody>
+									<tr>
+										<td>Password:</td>
+									</tr>
+									<tr>
+										<td colspan="2"><input type="password" name="password" id="password" maxlength="50" style="width: 100%" required/></td>
+									</tr>
+									<tr>
+										<td><span class="smalltext"><label for="avatar">Avatar:</label></span></td>
+									</tr>
+									<tr>
+										<td><input type="file" name="avatar" id="avatar" required/></td>
+									</tr>
+								</tbody>
+							</table>
+						</fieldset>
+					</td>
+				</tr>
+			</tbody>
+			</table>
+			<br />
+			<div id="submit" align="center">
+				<input type="submit" name="Submit" value="Submit avatar change!" />
+			</div>
+		</form>';
+		self::validateAvatarChange();
+	}
+
 	public static function checkNewPassword() {
 		if (Utils::post('newpassword') !== Utils::post('newpassword2')) {
 			throw new Exception('Passwords do not match');
@@ -470,6 +537,24 @@ class User {
 		$db = null;
 	}
 
+	public static function checkAvatar() {
+		$config = new Jason;
+		$tmp = $_FILES['avatar']['tmp_name'];
+		$imagePath = $config->get('avatar_path') . '/' . self::getUserId() . '_' . $_FILES['avatar']['name'];
+
+		if ($_FILES['avatar']['size'] > $config->get('avatar_max_size')) {
+			throw new Exception("File size too big, it must not exceed " . $config->get('avatar_max_size') . "bytes.");
+		}
+
+		if (file_exists($imagePath)) {
+			throw new Exception("Filename already exists");
+		} else {
+			Utils::imageImport($tmp, $config->get('avatar_max_width'), $config->get('avatar_max_height'), $imagePath);
+		}
+
+		Utils::setSession('avatar', $imagePath);
+	}
+
 	public static function getProfile() {
 		if (!Utils::isLoggedin()) {
 			print '<div id="register">You are either not logged in or do not have permission to view this page.</div>';
@@ -489,6 +574,10 @@ class User {
 				case "changeEmail" :
 					self::getEmailChangeForm();
 					return;
+
+				case "changeAvatar" : 
+					self::getAvatarChangeForm();
+					return;
 			}
 		}
 		
@@ -502,7 +591,18 @@ class User {
 					<td>
 						<fieldset>
 							<table cellpadding="6" cellspacing="0" width=100%>
-								<tbody>
+								<tbody>';
+
+									if (!empty(User::getAvatar())) {
+									print '<tr>
+										<td>Avatar:</td>
+									</tr>
+									<tr>
+										<td><img src=" ' . User::getAvatar() . '" /></td>
+									</tr>';
+
+									}
+									print '
 									<tr>
 										<td>Username:</td>
 									</tr>

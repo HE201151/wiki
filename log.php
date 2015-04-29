@@ -13,7 +13,7 @@ class Log {
         $username = Utils::handleUsers();
 
         $db = new db;
-        $db->request('SELECT id, username, mail, status FROM users WHERE username = :name AND password = :pass');
+        $db->request('SELECT id, username, mail, status, avatar FROM users WHERE username = :name AND password = :pass');
         $db->bind(':name', $username);
         $db->bind(':pass', Hash::get(Utils::post('password')));
         $result = $db->getAssoc();
@@ -27,6 +27,7 @@ class Log {
             Utils::setSession("email", $result['mail']);
             Utils::setSession("user_id", $result['id']);
             Utils::setSession("status", $result['status']);
+            Utils::setSession("avatar", $result['avatar']);
             Error::alliswell();
 
             Utils::setSession('is_logged_in', true);

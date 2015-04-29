@@ -1,5 +1,5 @@
 <?php
-/* XXX change to Singleton class ? */
+
 class Jason {
     /* config file path */
     const config_file = "config.ini";

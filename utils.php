@@ -56,5 +56,51 @@ class Utils {
 			return self::get('page');
 		}
 	}
+
+	public static function goBack() {
+		print '<script type="text/javascript">'
+						. 'history.go(-1);'
+						. '</script>';
+	}
+
+	public static function imageImport($filename, $width, $height, $imagePath) {
+		/* get image info */
+		$imageInfo = getimagesize($filename);
+      	
+      	$curWidth = $imageInfo[0];
+      	$curHeight = $imageInfo[1];
+      	$imageType = $imageInfo[2];
+
+      	// XXX set accepted extensions in config ?
+      	/* load image */
+      	if ($imageType == IMAGETYPE_JPEG) {
+        	$image = imagecreatefromjpeg($filename);
+      	} else if ($imageType == IMAGETYPE_GIF) {
+        	$image = imagecreatefromgif($filename);
+      	} else if ($imageType == IMAGETYPE_PNG) {
+      		$image = imagecreatefrompng($filename);
+      	} else {
+      		throw new Exception("Unsupported image format");
+      	}
+
+      	/* resize image if needed */
+      	if ($width < $curWidth || $height < $curHeight) {
+      		$newImage = imagecreatetruecolor($width, $height);
+      		if (!imagecopyresampled($newImage, $image, 0, 0, 0, 0, $width, $height, $curWidth, $curHeight)) {
+      			throw new Exception("Failed to resize image");
+      		}
+     	} else {
+     		$newImage = $image;
+     	}
+
+      	/* overwrite current image with resized image */
+      	if ($imageType == IMAGETYPE_JPEG) {
+        	imagejpeg($newImage, $imagePath);
+      	} else if ($imageType == IMAGETYPE_GIF) {
+        	imagegif($newImage, $imagePath);
+      	} else if($imageType == IMAGETYPE_PNG) {
+        	imagepng($newImage, $imagePath);
+      	}
+	}
 }
 ?>

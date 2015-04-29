@@ -313,8 +313,8 @@ class Register {
 		$db->bind(':code', Utils::get('activationCode'));
 		$result = $db->getAssoc();
 		if (!empty($result)) {
-			// upgrade user
-			User::changeStatus($result['users_id'], UserStatus::Member);
+			$status = User::getStatusFromActivationCode($result['activationCode']);
+			User::toggleReactivation($result['users_id'], $status);
 			self::getSuccessfulActivationMessage();
 
 			// delete activation code

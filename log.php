@@ -19,15 +19,16 @@ class Log {
         $result = $db->getAssoc();
 
         if (!empty($result)) {
-            if ($result['status'] == UserStatus::Registered) {
-                Error::set("This user has not yet activated, please click the link in the email sent after registration.");
+            if (!User::canLogin(Utils::stringToArray($result['status']))) {
+                Error::set("This user can't login.");
                 return;
             }
             Utils::setSession("username", $result['username']);
             Utils::setSession("email", $result['mail']);
             Utils::setSession("user_id", $result['id']);
-            Utils::setSession("status", $result['status']);
+            Utils::setSession("status", Utils::stringToArray($result['status']));
             Utils::setSession("avatar", $result['avatar']);
+
             Error::alliswell();
 
             Utils::setSession('is_logged_in', true);

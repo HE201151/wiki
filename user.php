@@ -4,33 +4,34 @@ include_once 'db.php';
 include_once 'hash.php';
 
 abstract class UserStatus {
-	const Administrator = 0;
-	const Moderator = 1;
-	const Member = 2;
-	const Reactivation = 3;
-	const ForgotPassword = 4;
-	const Frozen = 5;
-	const Banned = 6;
-	const Registered = 7;
-	const Deregistered = 8;
+	const Administrator = "admin";
+	const Moderator = "moderator";
+	const Member = "member";
+	const Reactivation = "reactivation";
+	const ForgotPassword = "forgotpwd";
+	const Frozen = "frozen";
+	const Banned = "banned";
+	const Registered = "registered";
+	const Deregistered = "deregistered";
 
-	const canConnect = [ self::Administrator, self::Moderator, self::User, 
+	const canLogin = [ self::Administrator, self::Moderator, self::Member, 
 						self::Reactivation, self::Frozen ];
 
-	const canContact = [ self::Administrator, self::Moderator, self::User,
+	const canContact = [ self::Administrator, self::Moderator, self::Member,
 						self::Reactivation, self::ForgotPassword, self::Frozen ];
 
-	const canChangePassword = [ self::Administrator, self::Moderator, self::User,
+	const canChangePassword = [ self::Administrator, self::Moderator, self::Member,
 								self::Froze, self::Reactivation ];
 
-	const canEditProfile = [ self::Administrator, self::Moderator, self::Member ];
+	const canEditProfile = [ self::Administrator, self::Moderator, self::Member, self::Reactivation ];
 }
 
 class User {
 	public static function changeStatus($id, $status) {
 		$db = new db;
-		$db->request('UPDATE users SET status = :status where id = :id');
-		$db->bind(':status', $status);
+		$db->request('UPDATE users SET status = :status WHERE id = :id');
+		$statusStr = Utils::arrayToString($status);
+		$db->bind(':status', $statusStr);
 		$db->bind(':id', $id);
 		$db->doquery();
 		$db = null;
@@ -38,20 +39,31 @@ class User {
 		Utils::setSession("status", $status);
 	}
 
-	public static function canConnect() {
-		return array_key_exists(self::getStatus(), UserStatus::canConnect);
+	public static function toggleReactivation($id, $curStatus) {
+		$isReactivation = in_array(UserStatus::Reactivation, $curStatus);
+		if ($isReactivation) {
+			$status = [ reset($curStatus) ];
+		} else {
+			$status = [ $curStatus[0], UserStatus::Reactivation ];
+		}
+
+		self::changeStatus($id, $status);
 	}
 
-	public static function canContact() {
-		return array_key_exists(self::getStatus(), UserStatus::canContact);
+	public static function canLogin($status) {
+		return (Utils::in_array_any($status, UserStatus::canLogin));
 	}
 
-	public static function canChangePassword() {
-		return array_key_exists(self::getStatus(), UserStatus::canChangePassword);
+	public static function canContact($status) {
+		return (Utils::in_array_any($status, UserStatus::canContact));
 	}
 
-	public static function canEditProfile() {
-		return array_key_exists(self::getStatus(), UserStatus::canEditProfile);
+	public static function canChangePassword($status) {
+		return (Utils::in_array_any($status, UserStatus::canChangePassword));
+	}
+
+	public static function canEditProfile($status) {
+		return (Utils::in_array_any($status, UserStatus::canEditProfile));
 	}
 
 	public static function getUsername() {
@@ -66,6 +78,15 @@ class User {
 		return Utils::getSession('status');
 	}
 
+	public static function getStatusFromActivationCode($code) {
+		$db = new db;
+		$db->request('SELECT status FROM users WHERE id = (SELECT users_id from activations WHERE activationCode = :code);');
+		$db->bind(':code', $code);
+		$result = $db->getAssoc();
+		$db = null;
+		return Utils::stringToArray($result['status']);
+	}
+
 	public static function getUserId() {
 		return Utils::getSession('user_id');
 	}
@@ -75,39 +96,7 @@ class User {
 	}
 
 	public static function getStatusDesc() {
-		switch (self::getStatus()) {
-			case UserStatus::Administrator :
-				$v = "Administrator";
-				break;
-			case UserStatus::Moderator :
-				$v = "Moderator";
-				break;
-			case UserStatus::Member :
-				$v = "Member";
-				break;
-			case UserStatus::Reactivation :
-				$v = "Member in reactivation";
-				break;
-			case UserStatus::ForgotPassword :
-				$v = "Member forgot password";
-				break;
-			case UserStatus::Frozen : 
-				$v = "Frozen member";
-				break;
-			case UserStatus::Banned : 
-				$v = "Banned member";
-				break;
-			case UserStatus::Registered :
-				$v = "Registered";
-				break;
-			case UserStatus::Deregistered :
-				$v = "Deregistered";
-				break;
-			default :
-				$v = "Invalid status";
-		}
-
-		return $v;
+		return Utils::arrayToString(self::getStatus());
 	}
 
 	public static function validUsername($username) {
@@ -174,8 +163,7 @@ class User {
 		$activationCode = $result['activationCode'];
 		$db = null;
 
-		// change user status XXX combine status for ex. admin changing email
-		User::changeStatus(User::getUserId(), UserStatus::Reactivation);
+		User::toggleReactivation(self::getUserId(), self::getStatus());
 
 		// send reactivation mail
 		$msg = 'Hello, please click on the following link to reactivate your account:<br />'
@@ -626,8 +614,7 @@ class User {
 						</fieldset>
 					</td>
 				</tr> ';
-
-				if (self::canEditProfile()) {
+				if (self::canEditProfile(self::getStatus())) {
 					print '
 				<tr>
 					<tr>

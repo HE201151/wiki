@@ -102,5 +102,25 @@ class Utils {
         	imagepng($newImage, $imagePath);
       	}
 	}
+
+	public static function in_array_any($keys, $array) {
+		return !!array_intersect($keys, $array);
+	}
+
+	public static function arrayToString($array) {
+		if (count($array) > 1) {
+			return implode(', ', $array);
+		} else {
+			return $array[0];
+		}
+	}
+
+	public static function stringToArray($string) {
+		if (strpos($string, ',') !== false) {
+			return array_map('trim', array_filter(explode(', ', $string)));
+		} else {
+			return array($string);
+		}
+	}
 }
 ?>

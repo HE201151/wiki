@@ -253,8 +253,8 @@ class Register {
 		}
 
 		// Check if email is already used
-		$this->db->request('SELECT 1 FROM users WHERE mail = :mail');
-		$this->db->bind(':mail', $this->email);
+		$this->db->request('SELECT 1 FROM users WHERE email = :email');
+		$this->db->bind(':email', $this->email);
 		$emailExists = $this->db->getAssoc();
 		if (!empty($emailExists)) {
 			throw new Exception('Email is already used');
@@ -293,10 +293,10 @@ class Register {
 
 	private function insertUser() {
 		/* insert user in users table */
-		$this->db->request('INSERT into users (username, password, created, mail, status) VALUES (:username, :password, now(), :mail, :status);');
+		$this->db->request('INSERT into users (username, password, created, email, status) VALUES (:username, :password, now(), :email, :status);');
 		$this->db->bind(':username', $this->username);
 		$this->db->bind(':password', $this->password);
-		$this->db->bind(':mail', $this->email);
+		$this->db->bind(':email', $this->email);
 		$this->db->bind(':status', UserStatus::Registered);
 		$this->db->doquery();
 
@@ -315,6 +315,9 @@ class Register {
 		if (!empty($result)) {
 			$status = User::getStatusFromActivationCode($result['activationCode']);
 			User::toggleReactivation($result['users_id'], $status);
+			if ($result['users_id'] === SessionUser::getUserId()) {
+				Utils::setSession('status', $status);
+			}
 			self::getSuccessfulActivationMessage();
 
 			// delete activation code

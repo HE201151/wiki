@@ -10,51 +10,59 @@
 		<?php
 			include_once 'menu.php';
 		?>
-		<header>
-			<?php Menu::showBanner(); Menu::showLogin(); ?>
-		</header>
-		<nav>
-			<?php Menu::getNavigation(); ?>
-		</nav>
-		<article>
-			<?php
-			if (Utils::page() === "register") {
-				include_once 'register.php';
-				Register::getRegisterForm();
+		<div class="wrapper">
+			<header>
+				<?php Menu::showBanner(); Menu::showLogin(); ?>
+			</header>
+			<nav>
+				<?php Menu::getNavigation(); ?>
+			</nav>
+			<article>
+				<?php
+				if (Utils::page() === "register") {
+					include_once 'register.php';
+					Register::getRegisterForm();
 
-			} else if (Utils::page() === "registerDone") {
-				include_once 'register.php';
-				Register::getSuccessfulRegistrationMessage();
+				} else if (Utils::page() === "registerDone") {
+					include_once 'register.php';
+					Register::getSuccessfulRegistrationMessage();
 
-			} else if (Utils::page() === "activation") {
-				include_once 'register.php';
-				Register::activate();
+				} else if (Utils::page() === "activation") {
+					include_once 'register.php';
+					Register::activate();
 
-			} else if (Utils::page() === "contact") {
-				include_once 'mail.php';
-				Mail::getContactForm();
+				} else if (Utils::page() === "contact") {
+					include_once 'mail.php';
+					Mail::getContactForm();
 
-			} else if (Utils::page() === "contactDone") {
-				include_once 'mail.php';
-				Mail::getSuccessfulContactMessage();
+				} else if (Utils::page() === "contactDone") {
+					include_once 'mail.php';
+					Mail::getSuccessfulContactMessage();
 
-			} else if (Utils::page() === "logout") {
-				include_once 'log.php';
-				Log::logout();
+				} else if (Utils::page() === "logout") {
+					include_once 'log.php';
+					Log::logout();
 
-			} else if (Utils::page() === "profile") {
-				include_once 'user.php';
-				User::getProfile();
+				} else if (Utils::page() === "profile") {
+					include_once 'user.php';
+					User::getProfile();
 
-			} else {
-				if (Utils::isLoggedIn()) {
-					echo User::getStatusDesc() . ' <a href="mailto:'. Utils::getSession("email").'">'. Utils::getSession("username").'</a>';
+				} else if (Utils::page() === "admin") {
+					include_once 'user.php';
+					User::getAdmin();
+
 				} else {
-					echo "You are not logged in.";
+					if (Utils::isLoggedIn()) {
+						echo SessionUser::getUserId() . SessionUser::getStatusDesc() . ' <a href="mailto:'. Utils::getSession("email").'">'. Utils::getSession("username").'</a>';
+					} else {
+						echo "You are not logged in.";
+					}
 				}
-			}
- 			?>
-		</article>
+	 			?>
+			</article>
+			<div class="clear"></div>
+			<div class="push"></div>
+		</div>
 		<footer>
 			<a href="mailto:youri.mout@gmail.com">Mail Youri Mouton, Copyright © 2015.</a>
 		</footer>

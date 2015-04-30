@@ -60,6 +60,11 @@ class db extends PDO {
 		return $this->sth->fetch(PDO::FETCH_ASSOC);
 	}
 
+	public function getAllAssoc() {
+		$this->doquery();
+		return $this->sth->fetchAll();
+	}
+
 	public function toString() {
 		return $this->database;
 	}

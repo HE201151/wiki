@@ -26,20 +26,106 @@ abstract class UserStatus {
 	const canEditProfile = [ self::Administrator, self::Moderator, self::Member, self::Reactivation ];
 }
 
+/* functions related to the current user in session. */
+class SessionUser {
+	public static function getUsername() {
+		return Utils::getSession('username');
+	}
+
+	public static function getEmail() {
+		return Utils::getSession('email');
+	}
+
+	public static function getStatus() {
+		return Utils::getSession('status');
+	}
+
+	public static function isAdmin($status) {
+		return (Utils::in_array_any($status, [ UserStatus::Administrator ]));
+	}
+
+	public static function getUserId() {
+		return Utils::getSession('user_id');
+	}
+
+	public static function getAvatar() {
+		return Utils::getSession('avatar');
+	}
+
+	public static function getStatusDesc() {
+		return Utils::arrayToString(self::getStatus());
+	}
+}
+
 class User {
-	public static function changeStatus($id, $status) {
+	private $db;
+	private $uid;
+	private $username;
+	private $email;
+	private $status;
+	private $acivated;
+	private $lastconnect;
+	private $avatar;
+
+	/*
+	 * Get user information from uid
+	 *
+	 */
+	// XXX uid = 0 does not work
+	public function __construct($uid) {
+		$this->db = new db;
+		$this->db->request('SELECT avatar, username, status, activated, lastconnect, email FROM users WHERE id = :id');
+		$this->db->bind(':id', $uid);
+		$info = $this->db->getAssoc();
+
+		if (!empty($info)) {
+			$this->uid = $uid;
+			$this->username = $info['username'];
+			$this->email = $info['email'];
+			$this->status = Utils::stringToArray($info['status']);
+			$this->activated = $info['activated'];
+			$this->lastconnect = $info['lastconnect'];
+			$this->avatar = $info['avatar'];
+		} else {
+			throw new Exception("User not found.");
+		}
+	}
+
+	public function getUsername() {
+		return $this->username;
+	}
+
+	public function getEmail() {
+		return $this->email;
+	}
+
+	public function getStatus() {
+		return $this->status;
+	}
+
+	public function getUserId() {
+		return $this->uid;
+	}
+
+	public function getAvatar() {
+		return $this->avatar;
+	}
+
+	public function getStatusDesc() {
+		return Utils::arrayToString($this->getStatus());
+	}
+
+	public static function changeStatus($uid, $status) {
 		$db = new db;
 		$db->request('UPDATE users SET status = :status WHERE id = :id');
 		$statusStr = Utils::arrayToString($status);
 		$db->bind(':status', $statusStr);
-		$db->bind(':id', $id);
+		$db->bind(':id', $uid);
 		$db->doquery();
 		$db = null;
-
-		Utils::setSession("status", $status);
 	}
 
-	public static function toggleReactivation($id, $curStatus) {
+	public static function toggleReactivation($uid, $curStatus) {
 		$isReactivation = in_array(UserStatus::Reactivation, $curStatus);
 		if ($isReactivation) {
 			$status = [ reset($curStatus) ];
@@ -47,7 +133,7 @@ class User {
 			$status = [ $curStatus[0], UserStatus::Reactivation ];
 		}
 
-		self::changeStatus($id, $status);
+		self::changeStatus($uid, $status);
 	}
 
 	public static function canLogin($status) {
@@ -66,37 +152,40 @@ class User {
 		return (Utils::in_array_any($status, UserStatus::canEditProfile));
 	}
 
-	public static function getUsername() {
-		return Utils::getSession('username');
-	}
-
-	public static function getEmail() {
-		return Utils::getSession('email');
-	}
-
-	public static function getStatus() {
-		return Utils::getSession('status');
-	}
-
 	public static function getStatusFromActivationCode($code) {
 		$db = new db;
-		$db->request('SELECT status FROM users WHERE id = (SELECT users_id from activations WHERE activationCode = :code);');
+		$db->request('SELECT status FROM users WHERE id = (SELECT users_id FROM activations WHERE activationCode = :code);');
 		$db->bind(':code', $code);
 		$result = $db->getAssoc();
 		$db = null;
 		return Utils::stringToArray($result['status']);
 	}
 
-	public static function getUserId() {
-		return Utils::getSession('user_id');
+	public static function getEmailFromUid($uid) {
+		$db = new db;
+		$db->request('SELECT email FROM users WHERE id = :id');
+		$db->bind(':id', $uid);
+		$result = $db->getAssoc();
+		$db = null;
+		return $result['email'];
 	}
 
-	public static function getAvatar() {
-		return Utils::getSession('avatar');
+	public static function getStatusFromUid($uid) {
+		$db = new db;
+		$db->request('SELECT status FROM users WHERE id = :id');
+		$db->bind(':id', $uid);
+		$result = $db->getAssoc();
+		$db = null;
+		return Utils::stringToArray($result['status']);
 	}
 
-	public static function getStatusDesc() {
-		return Utils::arrayToString(self::getStatus());
+	public static function getAvatarFromUid($uid) {
+		$db = new db;
+		$db->request('SELECT avatar FROM users WHERE id = :id');
+		$db->bind(':id', $uid);
+		$result = $db->getAssoc();
+		$db = null;
+		return $result['avatar'];
 	}
 
 	public static function validUsername($username) {
@@ -123,47 +212,47 @@ class User {
 		$db = null;
 	}
 
-	public static function updateUsername($username) {
+	public static function updateUsername($uid, $username) {
 		$db = new db;
-		$db->request('UPDATE users SET username = :newusername WHERE username = :oldusername;');
-		$db->bind(':oldusername', self::getUsername());
+		$db->request('UPDATE users SET username = :newusername WHERE id = :id;');
+		$db->bind(':id', $uid);
 		$db->bind(':newusername', $username);
 		$db->doquery();
 		$db = null;
 	}
 
-	public static function updatePassword($pwd) {
+	public static function updatePassword($uid, $pwd) {
 		$db = new db;
-		$db->request('UPDATE users set password = :newpassword WHERE password = :oldpassword;');
-		$db->bind(':oldpassword', Hash::get(Utils::post('password')));
+		$db->request('UPDATE users set password = :newpassword WHERE id = :id;');
+		$db->bind(':id', $uid);
 		$db->bind(':newpassword', Hash::get($pwd));
 		$db->doquery();
 		$db = null;
 	}
 
-	public static function updateEmail($email) {
+	public static function updateEmail($uid, $email) {
 		$db = new db;
 
 		// update email
-		$db->request('UPDATE users SET mail = :newmail WHERE mail = :oldmail');
-		$db->bind(':oldmail', self::getEmail());
+		$db->request('UPDATE users SET email = :newmail WHERE id = :id');
+		$db->bind(':id', $uid);
 		$db->bind(':newmail', $email);
 		$db->doquery();
 
 		// insert new activation code
 		$db->request('INSERT into activations (users_id, activationCode) VALUES (:id, :code);');
-		$db->bind(':id', User::getUserId());
+		$db->bind(':id', $uid);
 		$db->bind(':code', uniqid());
 		$db->doquery();
 
 		// get new activation code
 		$db->request('SELECT activationCode FROM activations WHERE users_id = :id');
-		$db->bind(':id', User::getUserId());
+		$db->bind(':id', $uid);
 		$result = $db->getAssoc();
 		$activationCode = $result['activationCode'];
 		$db = null;
 
-		User::toggleReactivation(self::getUserId(), self::getStatus());
+		User::toggleReactivation($uid, self::getStatusFromUid($uid));
 
 		// send reactivation mail
 		$msg = 'Hello, please click on the following link to reactivate your account:<br />'
@@ -174,11 +263,11 @@ class User {
 		Mail::sendMail($email, Jason::getOnce("admin_mail"), 'Account reactivation', $msg, true);
 	}
 
-	public static function updateAvatar() {
+	public static function updateAvatar($uid, $avatar) {
 		$db = new db;
 		$db->request('UPDATE users SET avatar = :avatar WHERE id = :id');
-		$db->bind(':avatar', self::getAvatar());
-		$db->bind(':id', self::getUserId());
+		$db->bind(':avatar', $avatar);
+		$db->bind(':id', $uid);
 		$db->doquery();
 		$db = null;
 	}
@@ -196,7 +285,7 @@ class User {
         $db = null;
 	}
 
-	public static function validateLoginChangeForm() {
+	public static function validateUsernameChangeForm() {
 		$config = new Jason;
 		$username_minlength = $config->get('login_min_size');
 		$username_maxlength = $config->get('login_max_size');
@@ -316,8 +405,12 @@ class User {
 		</script>';
 	}
 
-	public static function getLoginChangeForm() {
-		print '<form id="register" action="post.php?action=changeLogin" method="post" accept-charset="UTF-8">
+	public static function getUsernameChangeForm($uid = "") {
+		$get = $uid;
+		if (!empty($uid)) {
+			$get = '&uid=' . $uid;
+		}
+		print '<form id="register" action="post.php?action=changeUsername' . $get .'" method="post" accept-charset="UTF-8">
 			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
 			<tbody>
 				<tr>
@@ -352,11 +445,15 @@ class User {
 				<input type="submit" name="Submit" value="Submit login change!" />
 			</div>
 			</form>';
-		self::validateLoginChangeForm();
+		self::validateUsernameChangeForm();
 	}
 
-	public static function getPasswordChangeForm() {
-		print '<form id="register" action="post.php?action=changePassword" method="post" accept-charset="UTF-8">
+	public static function getPasswordChangeForm($uid = "") {
+		$get = $uid;
+		if (!empty($uid)) {
+			$get = '&uid=' . $uid;
+		}
+		print '<form id="register" action="post.php?action=changePassword' . $get .'" method="post" method="post" accept-charset="UTF-8">
 			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
 			<tbody>
 				<tr>
@@ -396,8 +493,12 @@ class User {
 		self::validatePasswordChangeForm();
 	}
 
-	public static function getEmailChangeForm() {
-		print '<form id="register" action="post.php?action=changeEmail" method="post" accept-charset="UTF-8">
+	public static function getEmailChangeForm($uid = "") {
+		$get = $uid;
+		if (!empty($uid)) {
+			$get = '&uid=' . $uid;
+		}
+		print '<form id="register" action="post.php?action=changeEmail' . $get .'" method="post" method="post" accept-charset="UTF-8">
 			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
 			<tbody>
 				<tr>
@@ -437,8 +538,12 @@ class User {
 		self::validateEmailChange();
 	}
 
-	public static function getAvatarChangeForm() {
-		print '<form id="register" action="post.php?action=changeAvatar" method="post" enctype="multipart/form-data" accept-charset="UTF-8">
+	public static function getAvatarChangeForm($uid = "") {
+		$get = $uid;
+		if (!empty($uid)) {
+			$get = '&uid=' . $uid;
+		}
+		print '<form id="register" action="post.php?action=changeAvatar' . $get .'" method="post" method="post" enctype="multipart/form-data" accept-charset="UTF-8">
 			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
 			<tbody>
 				<tr>
@@ -516,8 +621,8 @@ class User {
 
 		// Check if email is already used
 		$db = new db;
-		$db->request('SELECT 1 FROM users WHERE mail = :mail');
-		$db->bind(':mail', Utils::post('email'));
+		$db->request('SELECT 1 FROM users WHERE email = :email');
+		$db->bind(':email', Utils::post('email'));
 		$emailExists = $db->getAssoc();
 		if (!empty($emailExists)) {
 			throw new Exception('Email is already used');
@@ -525,13 +630,13 @@ class User {
 		$db = null;
 	}
 
-	public static function checkAvatar() {
+	public static function checkAvatar($uid) {
 		$config = new Jason;
 		$tmp = $_FILES['avatar']['tmp_name'];
-		$imagePath = $config->get('avatar_path') . '/' . self::getUserId() . '_' . $_FILES['avatar']['name'];
+		$imagePath = $config->get('avatar_path') . '/' . $uid . '_' . $_FILES['avatar']['name'];
 
 		if ($_FILES['avatar']['size'] > $config->get('avatar_max_size')) {
-			throw new Exception("File size too big, it must not exceed " . $config->get('avatar_max_size') . "bytes.");
+			throw new Exception("File size too big, it must not exceed " . $config->get('avatar_max_size') . " bytes.");
 		}
 
 		if (file_exists($imagePath)) {
@@ -540,7 +645,123 @@ class User {
 			Utils::imageImport($tmp, $config->get('avatar_max_width'), $config->get('avatar_max_height'), $imagePath);
 		}
 
-		Utils::setSession('avatar', $imagePath);
+		return $imagePath;
+	}
+
+	private static function getUserList() {
+		$db = new db;
+		$db->request('SELECT id, avatar, username, status, activated, lastconnect FROM users');
+		$userArray = $db->getAllAssoc();
+		$db = null;
+		print '<table id="register" border="0" cellspacing="0" cellpadding="6" class="tborder">
+			<tbody>
+				<tr>
+					<td id="regtitle">Member List</td>
+				</tr>
+				<tr id="formcontent">
+					<td>
+						<table cellpadding="6" cellspacing="0" width=100%>
+							<tbody>
+							<tr>
+								<td>Avatar</td>
+								<td>Username</td>
+								<td>Status</td>
+								<td>Joined</td>
+								<td>Last Visit</td>';
+
+								foreach ($userArray as $user => $link) {
+									print  '<tr>
+												<td class="trow"><img src="' . $link['avatar'] . '" width=70 height=70 /></td>
+												<td class="trow"><a href="index.php?page=profile&uid=' . $link['id'] . '">' . $link['username'] . '</a></td>
+												<td class="trow">' . $link['status'] . '</td>
+												<td class="trow">' . $link['activated'] . '</td>
+												<td class="trow">' . $link['lastconnect'] . '</td>
+											</tr>';
+								}
+							print '</tbody>
+						</table>
+					</td>
+				</tr>
+			</tbody>
+			</table>';
+	}
+
+	public static function getAdmin() {
+		print self::getUserList();
+	}
+
+	public function showProfile() {
+		print '<table id="register" border="0" cellspacing="0" cellpadding="6" class="tborder">
+			<tbody>
+				<tr>
+					<td id="regtitle">User Profile</td>
+				</tr>
+				<tr id="formcontent">
+					<td>
+						<fieldset>
+							<table cellpadding="6" cellspacing="0" width=100%>
+								<tbody>';
+
+									if (!empty($this->getAvatar())) {
+										print '
+									<tr>
+										<td>Avatar:</td>
+									</tr>
+									<tr>
+										<td><img src=" ' . $this->getAvatar() . '" /></td>
+									</tr>';
+									}
+									print '
+									<tr>
+										<td>Username:</td>
+									</tr>
+									<tr>
+										<td>' . $this->getUsername() . '</td>
+									</tr>
+									<tr> 
+										<td>Email:</td>
+									</tr>
+									<tr>
+										<td>' . $this->getEmail() . '</td>
+									</tr>
+									<tr>
+										<td>Status:</td>
+									</tr>
+									<tr>
+										<td>' . $this->getStatusDesc() . '</td>
+									</tr>
+								</tbody>
+							</table>
+						</fieldset>
+					</td>
+				</tr> ';
+				if (SessionUser::isAdmin(SessionUser::getStatus())) {
+					print '
+				<tr>
+					<tr>
+						<td id="regtitle">Edit User Profile</td>
+					</tr>
+					<tr id="formcontent">
+						<td>
+							<tr>
+								<td><a href="index.php?page=profile&action=changeUsername&uid=' . $this->getUserid() . '">Change login</a></td>
+							</tr>
+							<tr>
+								<td><a href="index.php?page=profile&action=changePassword&uid=' . $this->getUserid() . '">Change password</a></td>
+							</tr>
+							<tr>
+								<td><a href="index.php?page=profile&action=changeEmail&uid=' . $this->getUserid() . '">Change email</a></td>
+							</tr>
+							<tr>
+								<td><a href="index.php?page=profile&action=changeAvatar&uid=' . $this->getUserid() . '">Change avatar</a></td>
+							</tr>
+						</td>
+					</tr>
+				</tr>';
+				}
+				print '
+			</tbody>
+		</table>';
 	}
 
 	public static function getProfile() {
@@ -549,22 +770,33 @@ class User {
 			return;
 		}
 
+		if (Utils::isGet('uid') && !(Utils::isGet('action'))) {
+			try {
+				$user = new User(Utils::get('uid'));
+				$user->showProfile();
+			} catch (Exception $e) {
+				Error::exception($e);
+			}
+			return;
+		}
+
+		$get = !isset($_GET['uid']) ? "" : Utils::get('uid');
 		if (Utils::isGet('action')) {
 			switch (Utils::get('action')) {
-				case "changeLogin" :
-					self::getLoginChangeForm();
+				case "changeUsername" :
+					self::getUsernameChangeForm($get);
 					return;
 				
 				case "changePassword" :
-					self::getPasswordChangeForm();
+					self::getPasswordChangeForm($get);
 					return;
 
 				case "changeEmail" :
-					self::getEmailChangeForm();
+					self::getEmailChangeForm($get);
 					return;
 
 				case "changeAvatar" : 
-					self::getAvatarChangeForm();
+					self::getAvatarChangeForm($get);
 					return;
 			}
 		}
@@ -581,12 +813,12 @@ class User {
 							<table cellpadding="6" cellspacing="0" width=100%>
 								<tbody>';
 
-									if (!empty(User::getAvatar())) {
+									if (!empty(SessionUser::getAvatar())) {
 									print '<tr>
 										<td>Avatar:</td>
 									</tr>
 									<tr>
-										<td><img src=" ' . User::getAvatar() . '" /></td>
+										<td><img src=" ' . SessionUser::getAvatar() . '" /></td>
 									</tr>';
 
 									}
@@ -595,26 +827,26 @@ class User {
 										<td>Username:</td>
 									</tr>
 									<tr>
-										<td>' . self::getUsername() . '</td>
+										<td>' . SessionUser::getUsername() . '</td>
 									</tr>
 									<tr> 
 										<td>Email:</td>
 									</tr>
 									<tr>
-										<td>' . self::getEmail() . '</td>
+										<td>' . SessionUser::getEmail() . '</td>
 									</tr>
 									<tr>
 										<td>Status:</td>
 									</tr>
 									<tr>
-										<td>' . self::getStatusDesc() . '</td>
+										<td>' . SessionUser::getStatusDesc() . '</td>
 									</tr>
 								</tbody>
 							</table>
 						</fieldset>
 					</td>
 				</tr> ';
-				if (self::canEditProfile(self::getStatus())) {
+				if (self::canEditProfile(SessionUser::getStatus())) {
 					print '
 				<tr>
 					<tr>
@@ -623,7 +855,7 @@ class User {
 					<tr id="formcontent">
 						<td>
 							<tr>
-								<td><a href="index.php?page=profile&action=changeLogin">Change login</a></td>
+								<td><a href="index.php?page=profile&action=changeUsername">Change login</a></td>
 							</tr>
 							<tr>
 								<td><a href="index.php?page=profile&action=changePassword">Change password</a></td>

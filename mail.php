@@ -71,7 +71,7 @@ class Mail {
 
 		$html = Jason::getOnce('msg_allow_html');
 
-		$subject = Utils::post("subject");
+		$subject = Jason::getOnce("banner") . Utils::post("subject");
 
 		$message = Utils::post("message");
 
@@ -87,7 +87,7 @@ class Mail {
 		$db->request('INSERT INTO messages (subject, email, user_id) VALUES (:subject, :email, :user_id);');
 		$db->bind(':subject', $subject);
 		$db->bind(':email', $from);
-		$db->bind(':user_id', (!empty(User::getUserId())) ?: null);
+		$db->bind(':user_id', (!empty(SessionUser::getUserId())) ?: null);
 		
 		try {
 			$db->doquery();

@@ -13,7 +13,7 @@ class Log {
         $username = Utils::handleUsers();
 
         $db = new db;
-        $db->request('SELECT id, username, mail, status, avatar FROM users WHERE username = :name AND password = :pass');
+        $db->request('SELECT id, username, email, status, avatar FROM users WHERE username = :name AND password = :pass');
         $db->bind(':name', $username);
         $db->bind(':pass', Hash::get(Utils::post('password')));
         $result = $db->getAssoc();
@@ -24,8 +24,9 @@ class Log {
                 return;
             }
             Utils::setSession("username", $result['username']);
-            Utils::setSession("email", $result['mail']);
-            Utils::setSession("user_id", $result['id']);
+            Utils::setSession("email", $result['email']);
+            // XXX why isn't PDO setting "0" to session
+            Utils::setSession("user_id", $result['id'] === "0" ? "admin" : $result['id']);
             Utils::setSession("status", Utils::stringToArray($result['status']));
             Utils::setSession("avatar", $result['avatar']);
 

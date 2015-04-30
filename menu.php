@@ -15,11 +15,25 @@ class Menu {
 		}
 		if (!Utils::isLoggedIn()) {
 			echo '<div id="login">
-				<form method="post" action="post.php?action=login">
-					<input placeholder="user name" type="text" name="username">
-					<input placeholder="password" type="password" name="password">
+				<form id="loginForm" method="post" action="post.php?action=login">
+					<input id="username" placeholder="user name" type="text" name="username" required>
+					<input id="password" placeholder="password" type="password" name="password" required>
 					<input type="submit" name="login" value="login">
-				</form>';
+				</form>
+				<script>
+				$(function() {
+					$("#loginForm").validate({
+						rules: {
+							username: "required",
+							password: "required"
+						},
+						messages: {
+							username: "Please enter a username",
+							password: "Please provide a password"
+						}
+					});
+				});
+				</script>';
 		} else {
 			echo '<div id="login">You are logged in as <a href="?page=profile">' . Utils::getSession("username") . '</a></div>';
 		}
@@ -31,8 +45,8 @@ class Menu {
 		echo "<ul>";
 		echo '<li><a href="index.php">Home</a></li>';
 		if (Utils::isLoggedIn()) {
-			if (User::getStatus() == UserStatus::Administrator) {
-				echo '<li><a href="?page=administration">Admin</a></li>';
+			if (SessionUser::isAdmin(SessionUser::getStatus())) {
+				echo '<li><a href="?page=admin">Admin</a></li>';
 			}
 			echo '<li><a href="?page=profile">Profile</a></li>';
 			echo '<li><a href="?page=logout">Log Out</a></li>';

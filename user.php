@@ -24,6 +24,8 @@ abstract class UserStatus {
 								self::Froze, self::Reactivation ];
 
 	const canEditProfile = [ self::Administrator, self::Moderator, self::Member, self::Reactivation ];
+
+	const profileRequest = 'SELECT id, avatar, username, status, activated, lastconnect FROM users ';
 }
 
 /* functions related to the current user in session. */
@@ -186,6 +188,26 @@ class User {
 		$result = $db->getAssoc();
 		$db = null;
 		return $result['avatar'];
+	}
+
+	public static function getUsersFromKey($key, $value) {
+		$db = new db;
+
+		$request = UserStatus::profileRequest;
+
+		if ($key === 'username') {
+			$request .= 'WHERE username = :value;';
+		} else if ($key === 'email') {
+			$request .= 'WHERE email = :value;';
+		} else if ($key === 'status') {
+			$request .= 'WHERE status = :value';
+		} else if ((!empty($key)) && (!empty($value))) {
+			throw new Exception('Wrong search key');
+		}
+
+		$db->request($request);
+		$db->bind(':value', $value);
+		return $db->getAllAssoc();
 	}
 
 	public static function validUsername($username) {
@@ -400,6 +422,23 @@ class User {
 				},
 				messages: {
 					password: "Please enter a username"
+				}
+			});
+		});
+		</script>';
+	}
+
+	public static function validateSearchForm() {
+		print '<script>
+		$(function() {
+			$("#register").validate({
+				rules: {
+					search: "required",
+					select: "required"
+				},
+				messages: {
+					search: "Please enter a search key",
+					select: "Please choose what to search from"
 				}
 			});
 		});
@@ -649,11 +688,7 @@ class User {
 		return $imagePath;
 	}
 
-	private static function getUserList() {
-		$db = new db;
-		$db->request('SELECT id, avatar, username, status, activated, lastconnect FROM users');
-		$userArray = $db->getAllAssoc();
-		$db = null;
+	public static function getMemberList($userArray) {
 		print '<table id="register" border="0" cellspacing="0" cellpadding="6" class="tborder">
 			<tbody>
 				<tr>
@@ -670,7 +705,7 @@ class User {
 								<td>Joined</td>
 								<td>Last Visit</td>';
 
-								foreach ($userArray as $user => $link) {
+								foreach ($userArray as $link) {
 									print  '<tr>
 												<td class="trow"><img src="' . $link['avatar'] . '" width=70 height=70 /></td>
 												<td class="trow"><a href="index.php?page=profile&uid=' . $link['id'] . '">' . $link['username'] . '</a></td>
@@ -687,8 +722,89 @@ class User {
 			</table>';
 	}
 
+	public static function getSearchForm() {
+		print '<form id="register" action="index.php?page=admin&action=listMembers" method="post">
+		<table border="0" cellspacing="0" cellpadding="6" class="tborder">
+			<tbody>
+				<tr>
+					<td id="regtitle">Member Search</td>
+				</tr>
+				<tr id="formcontent">
+					<td>
+						<table cellpadding="6" cellspacing="0" width=100%>
+							<tbody>
+								<tr>
+									<td colspan="2">Search</td>
+									<td>What to search</td>
+								</tr>
+								<tr>
+									<td colspan="2"><input type="text" name="search" id="search" maxlength="50" style="width: 100%" value="" required/></td>
+									<td>
+										<select id="select" name="select">
+											<option value="username">username</option>
+											<option value="email">email</option>
+											<option value="status">status</option>
+										</select>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<br />
+		<div id="submit" align="center">
+			<input type="submit" name="Submit" value="search" />
+		</div>
+		</form>';
+		print self::validateSearchForm();
+	}
+
 	public static function getAdmin() {
-		print self::getUserList();
+		if (Utils::isGet('action')) {
+			switch (Utils::get('action')) {
+				case 'listMembers' :
+					$key = (isset($_POST['select'])) ? Utils::post('select') : "";
+					$value = (isset($_POST['search'])) ? Utils::post('search') : "";
+					$userArray = User::getUsersFromKey($key, $value);
+					User::getMemberList($userArray);
+					break;
+
+				case 'searchMembers' :
+					print self::getSearchForm();
+					break;
+
+				default :
+					print 'invalid action.';
+			}
+		} else {
+			print '<table id="register" border="0" cellspacing="0" cellpadding="6" class="tborder">
+				<tbody>
+					<tr>
+						<td id="regtitle">Administration</td>
+					</tr>
+					<tr>
+						<tr id="formcontent">
+							<td>
+								<tr>
+									<td><a href="index.php?page=admin&action=listMembers">Member List</a></td>
+								</tr>
+								<tr>
+									<td><a href="index.php?page=admin&action=searchMembers">Search Members</a></td>
+								</tr>
+								<tr>
+									<td><a href="index.php?page=profile&action=changeEmail">Manage Messages</a></td>
+								</tr>
+								<tr>
+									<td><a href="index.php?page=profile&action=changeAvatar">Manage Settings</a></td>
+								</tr>
+							</td>
+						</tr>
+					</tr>
+				</tbody>
+			</table>';
+		}
 	}
 
 	public function showProfile() {

@@ -118,7 +118,6 @@ if (!empty($_POST)) {
 			}
 			break;
 
-
 		default : 
 			print 'unknown action.';
 	}

@@ -230,6 +230,7 @@ class User {
 		$db = null;
 	}
 
+	// XXX reactivation if change by admin ?
 	public static function updateEmail($uid, $email) {
 		$db = new db;
 

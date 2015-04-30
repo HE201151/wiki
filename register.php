@@ -40,7 +40,7 @@ class Register {
 										<td><span class="smalltext">Confirm Password:</span></td>
 									</tr>
 									<tr>
-										<td><input type="password" name="password" id="password" maxlength="50" style="width: 100%" required/></td>
+										<td><input type="password" name="password" id="password_id" maxlength="50" style="width: 100%" required/></td>
 										<td><input type="password" name="password2" id="password2" maxlength="50" style="width: 100%" required/></td>
 									</tr>
 									<tr>
@@ -88,7 +88,7 @@ class Register {
 					},
 					password2: {
 						required: true,
-						equalTo: "#password"
+						equalTo: "#password_id"
 					},
 					email: {
 						required: true,

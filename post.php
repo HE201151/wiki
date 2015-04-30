@@ -20,8 +20,8 @@ if (!empty($_POST)) {
 				} else {
 					User::updateUsername(SessionUser::getUserId(), Utils::post('username'));
 					Utils::setSession('username', Utils::post('username'));
-					Error::set('Username changed successfully.');
 				}
+				Error::set('Username changed successfully.');
 			} catch (Exception $e) {
 				Error::exception($e);
 			} finally {

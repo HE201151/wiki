@@ -762,6 +762,11 @@ class User {
 	}
 
 	public static function getAdmin() {
+		if (!SessionUser::isAdmin(SessionUser::getStatus())) {
+			print '<div id="register">You are not allowed to see this page.</div>';
+			return;
+		}
+
 		if (Utils::isGet('action')) {
 			switch (Utils::get('action')) {
 				case 'listMembers' :
@@ -773,6 +778,21 @@ class User {
 
 				case 'searchMembers' :
 					print self::getSearchForm();
+					break;
+
+				case 'settings' :
+					$j = new Jason;
+					$j->showConfig();
+					break;
+
+				case 'saveSettings' :
+					$j = new Jason;
+					foreach ($_POST as $key => $value) {
+						$j->set($key, $value);
+					}
+					$j->writeFile();
+					Error::set('Settings Saved.');
+					header("Location: index.php?page=admin&action=settings");
 					break;
 
 				default :
@@ -797,7 +817,7 @@ class User {
 									<td><a href="index.php?page=profile&action=changeEmail">Manage Messages</a></td>
 								</tr>
 								<tr>
-									<td><a href="index.php?page=profile&action=changeAvatar">Manage Settings</a></td>
+									<td><a href="index.php?page=admin&action=settings">Manage Settings</a></td>
 								</tr>
 							</td>
 						</tr>

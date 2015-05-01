@@ -71,14 +71,19 @@ class Mail {
 
 		$html = Jason::getOnce('msg_allow_html');
 
-		$subject = Jason::getOnce("banner") . Utils::post("subject");
+		$subject = Jason::getOnce("banner") . ' - ';
+		$subject .= Utils::post("subject");
 
 		$message = Utils::post("message");
 
 		$headers  = "From: " . $from  . "\r\n";
 		$headers .= "Reply-To: " . $from . "\r\n";
 		$headers .= "MIME-Version: 1.0\r\n";
-		$headers .= "Content-Type: text/" . $html ? "html" : "plain" . "; charset=ISO-8859-1\r\n";
+		if ($html === "true") {
+			$headers .= "Content-Type: text/html; charset=ISO-8859-1\r\n";
+		} else {
+			$headers .= "Content-Type: text/plain; charset=ISO-8859-1\r\n";
+		}
 
 		mail($to, $subject, $message, $headers);
 
@@ -87,13 +92,8 @@ class Mail {
 		$db->request('INSERT INTO messages (subject, email, user_id) VALUES (:subject, :email, :user_id);');
 		$db->bind(':subject', $subject);
 		$db->bind(':email', $from);
-		$db->bind(':user_id', (!empty(SessionUser::getUserId())) ?: null);
-		
-		try {
-			$db->doquery();
-		} catch (Exception $e) {
-			die($e->getMessage());
-		}
+		$db->bind(':user_id', (!empty(SessionUser::getUserId())) ? SessionUser::getUserId() : null);
+		$db->doquery();
 
 		$db = null;
 		Error::alliswell();
@@ -124,6 +124,9 @@ class Mail {
 			$message = htmlentities($msg);
 		}
 
+		$msubject = Jason::getOnce("banner") . ' - ';
+		$msubject .= $subject;
+
 		$headers  = "From: " . $from  . "\r\n";
 		$headers .= "Reply-To: " . $from . "\r\n";
 		$headers .= "MIME-Version: 1.0\r\n";
@@ -131,7 +134,7 @@ class Mail {
 		$headers .= $html ? "html" : "plain";
 		$headers .= "; charset=ISO-8859-1\r\n";
 
-		mail($to, $subject, $message, $headers);
+		mail($to, $msubject, $message, $headers);
 	}
 
 }

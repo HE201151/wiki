@@ -1,5 +1,7 @@
 <?php
 
+include_once 'error.php';
+
 class Jason {
     /* config file path */
     const config_file = "config.ini";
@@ -28,10 +30,46 @@ class Jason {
     	try {
     		$jfile = file_get_contents(self::config_file);
     	} catch (Exception $i) {
-    		echo 'Exception : ', $e->getMessage(), "\n";
+    		Error::exception($i);
     	}
 
         $this->decode($jfile);
+    }
+
+    public function showConfig() {
+        print '
+        <form id="register" action="index.php?page=admin&action=saveSettings" method="post">
+            <table border="0" cellspacing="0" cellpadding="6" class="tborder">
+            <tbody>
+                <tr>
+                    <td id="regtitle">Website Settings</td>
+                </tr>
+                <tr id="formcontent">
+                    <td>
+                        <table cellpadding="6" cellspacing="0" width=100%>
+                            <tbody>
+                            <tr>
+                                <td id="tcat">key</td>
+                                <td id="tcat">value</td>';
+
+                                foreach ($this->json as $key => $value) {
+                                    print  '<tr>
+                                                <td class="trow">' . $key . '</td>
+                                                <td class="trow">
+                                                    <input type="text" name="' . $key . '" id=config_' . $key . ' value="' . $value . '" />
+                                                </td>
+                                            </tr>';
+                                }
+                            print '</tbody>
+                        </table>
+                    </td>
+                </tr>
+            </tbody>
+            </table>
+            <div align="center" id="submit">
+                    <input id="submit_button" type="submit" value="Save Settings" />
+            </div>
+        </form>';
     }
 
     /*
@@ -42,8 +80,7 @@ class Jason {
     public function getJSONerror() {
             $err = static::$json_errors[json_last_error()];
             if ($err != JSON_ERROR_NONE)
-                echo '!! JSON ERROR => ' . $err;
-                
+                Error::set($err);                
     }
 
     /*

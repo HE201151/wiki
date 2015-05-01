@@ -259,3 +259,12 @@ td.trow {
 select#select {
     width: 100%;
 }
+
+td#tcat {
+    background-color: white;
+    color: #34495e;
+}
+
+td.trow input {
+    width: 100%;
+}

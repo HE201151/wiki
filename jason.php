@@ -135,7 +135,7 @@ class Jason {
      *
      */
     public function writeFile() {
-        file_put_contents(self::config_file, json_encode($this->json)); 
+        file_put_contents(self::config_file, json_encode($this->json, JSON_PRETTY_PRINT)); 
     }
 
 }

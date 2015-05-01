@@ -7,7 +7,76 @@ include_once 'error.php';
 include_once 'user.php';
 
 class Mail {
-	public static function getContactForm() { 
+	public static function getContactForm() {
+		if (Utils::isLoggedIn()) {
+			if (isset($_GET['mid'])) {
+				$db = new db;
+				$db->request('SELECT id, user_id, subject, message, date FROM messages WHERE id = :id OR parent_id = :id ORDER BY date ASC');
+				$db->bind(':id', Utils::get('mid'));
+				$msgArray = $db->getAllAssoc();
+				print '
+		        <table id="register" border="0" cellspacing="0" cellpadding="6" class="tborder">
+		        <tbody>
+		            <tr>
+		                <td id="regtitle">' . $msgArray[0]['subject'] . '</td>
+		            </tr>
+		            <tr id="formcontent">
+		                <td>
+		                    <table cellpadding="6" cellspacing="0" width=100%>
+		                        <tbody>';
+		                            foreach ($msgArray as $key => $value) {
+		                            	$db->request('SELECT id, username, avatar FROM users WHERE id = (SELECT user_id FROM messages WHERE user_id = :uid LIMIT 1);');
+		                            	$db->bind(':uid', $value['user_id']);
+		                            	$newresult = $db->getAssoc();
+		                                print  '<tr>
+			                                		<tr>
+			                                			<td>
+			                                				<table class="avatartable" style="border: none!important;" cellspacing="0" cellpadding="0" border="0">
+			                                					<tbody>
+			                                						<tr>
+			                                            				<td class="avatartd"><a href="index.php?page=profile&uid="' . $newresult['id'] . '"><img src="' . $newresult['avatar']  . '" width=70 height=70 /></a></td>
+			                                            				<td><a href="index.php?page=profile&uid="' . $newresult['id'] . '">' . $newresult['username'] . '</a></td>
+			                                            			</tr>
+			                                            		</tbody>
+			                                            	</table>
+			                                            </td>
+			                                        </tr>
+			                                        <tr>
+			                                            <td class="msgtd">' . $value['message'] . '</td>
+			                                        </tr>
+			                                        <tr>
+			                                            <td class="datetd">' . $value['date'] . '</td>
+			                                        </tr>
+		                                        </tr>';
+		                            }
+		                        print '</tbody>
+		                    </table>
+		                </td>
+		            </tr>
+	                <tr class="msgactions">
+						<td><a href="index.php?page=contact&mid=' . Utils::get('mid') . '&action=reply"><input id="submit_button" type="submit" value="Reply" /></a></td>
+					</tr>
+		        </tbody>
+		        </table>';
+		        if (isset($_GET['action'])) {
+					if (Utils::get('action') === "reply") {
+						print '
+						<form id="contact_form" action="post.php?action=message&mid=' . Utils::get('mid') . '" method="POST">
+							<textarea id="message" class="input" name="message" rows="7" cols="30" required></textarea><br />
+							<div align="center" id="submit">
+								<input id="submit_button" type="submit" value="Send reply" />
+							</div>
+						</form>
+						';
+					}
+				}
+	        	$db = null;
+				return;
+			}
+		} else {
+			self::noPermission();
+		}
+
 		print self::preSubmitValidation() . '
 		<form id="contact_form" action="post.php?action=message" method="POST" enctype="multipart/form-data">
 			<div class="row">
@@ -89,14 +158,49 @@ class Mail {
 
 		/* insert message into db */
 		$db = new db;
-		$db->request('INSERT INTO messages (subject, email, user_id) VALUES (:subject, :email, :user_id);');
+		$db->request('INSERT INTO messages (subject, email, user_id, date, message) VALUES (:subject, :email, :user_id, now(), :msg);');
 		$db->bind(':subject', $subject);
 		$db->bind(':email', $from);
 		$db->bind(':user_id', (!empty(SessionUser::getUserId())) ? SessionUser::getUserId() : null);
+		$db->bind(':msg', $message);
 		$db->doquery();
 
 		$db = null;
 		Error::alliswell();
+	}
+
+	public static function reply($parent) {
+		if (!Utils::isLoggedIn()) {
+			throw new Exception('Please log in to answer messages');
+		}
+
+		if (empty($parent)) {
+			throw new Exception('empty parent');
+		}
+		$db = new db;
+		$db->request('SELECT email, subject FROM messages WHERE id = :parent;');
+		$db->bind(':parent', $parent);
+		$result = $db->getAssoc();
+
+		if (empty($result)) {
+			throw new Exception('parent message not found');
+		}
+
+		$db->request('INSERT INTO messages (subject, email, user_id, date, message, parent_id) VALUES (:subject, :email, :user_id, now(), :msg, :parent);');
+		$db->bind(':subject', $result['subject']);
+		$db->bind(':email', $result['email']);
+		$db->bind(':user_id', SessionUser::getUserId());
+		$db->bind(':msg', Utils::post('message'));
+		$db->bind(':parent', $parent);
+		$db->doquery();
+
+		$db = null;
+
+		try {
+			self::sendMail($result['email'], SessionUser::getEmail(), $result['subject'], Utils::post('message'), false);
+		} catch (Exception $e) {
+			Error::exception($e);
+		}
 	}
 
 	public static function validateEmail($email) {

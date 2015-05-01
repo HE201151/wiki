@@ -199,7 +199,6 @@ form#contact_form {
     width: 530px;
     margin-top: 10px;
     background-color: #34495e;
-    padding: 10px;
 }
 
 textarea#message {
@@ -267,4 +266,26 @@ td#tcat {
 
 td.trow input {
     width: 100%;
+}
+
+table.avatartable {
+    width: 1px;
+    margin-left: -6px;
+}
+
+td.avatartd {
+    padding-right: 10px;
+}
+
+td.msgtd {
+    border: 1px solid white;
+}
+
+td.datetd {
+    font-size: 12px;
+    text-align: right;
+}
+
+tr.msgactions {
+    float: right;
 }

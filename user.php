@@ -201,7 +201,7 @@ class User {
 			$request .= 'WHERE email = :value;';
 		} else if ($key === 'status') {
 			$request .= 'WHERE status = :value';
-		} else if ((!empty($key)) && (!empty($value))) {
+		} else if (!empty($key) && !empty($value)) {
 			throw new Exception('Wrong search key');
 		}
 
@@ -707,7 +707,7 @@ class User {
 
 								foreach ($userArray as $link) {
 									print  '<tr>
-												<td class="trow"><img src="' . $link['avatar'] . '" width=70 height=70 /></td>
+												<td class="trow"><a href="index.php?page=profile&uid=' . $link['id'] . '"><img src="' . $link['avatar'] . '" width=70 height=70 /></a></td>
 												<td class="trow"><a href="index.php?page=profile&uid=' . $link['id'] . '">' . $link['username'] . '</a></td>
 												<td class="trow">' . $link['status'] . '</td>
 												<td class="trow">' . $link['activated'] . '</td>
@@ -761,6 +761,53 @@ class User {
 		print self::validateSearchForm();
 	}
 
+	public static function getSearchFailed() {
+		print '<div id="register">Sorry, but no results were found.</div>';
+	}
+
+	public static function getMessageList() {
+		$db = new db;
+		$db->request('SELECT id, subject, email, user_id, parent_id, date FROM messages;');
+		$msgArray = $db->getAllAssoc();
+
+		print '
+        <table id="register" border="0" cellspacing="0" cellpadding="6" class="tborder">
+        <tbody>
+            <tr>
+                <td id="regtitle">Messages</td>
+            </tr>
+            <tr id="formcontent">
+                <td>
+                    <table cellpadding="6" cellspacing="0" width=100%>
+                        <tbody>
+                        <tr>
+                            <td id="tcat">Member</td>
+                            <td id="tcat">Subject</td>
+                            <td id="tcat">Email</td>
+                            <td id="tcat">Date</td>
+                            <td id="tcat">Parent</td>';
+
+                            foreach ($msgArray as $key => $value) {
+                            	$db->request('SELECT username FROM users WHERE id = (SELECT user_id FROM messages WHERE user_id = :uid LIMIT 1);');
+                            	$db->bind(':uid', $value['user_id']);
+                            	$result = $db->getAssoc();
+                                print  '<tr>
+                                            <td class="trow"><a href="index.php?page=profile&uid=' . $value['user_id'] . '">' . $result['username'] . '</a></td>
+                                            <td class="trow"><a href="index.php?page=contact&mid=' . $value['id'] . '">' . $value['subject'] . '</a></td>
+                                            <td class="trow">' . $value['email'] . '</td>
+                                            <td class="trow">' . $value['date'] . '</td>
+                                            <td class="trow">' . $value['parent_id'] . '</td>
+                                        </tr>';
+                            }
+                        print '</tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+        </table>';
+        $db = null;
+	}
+
 	public static function getAdmin() {
 		if (!SessionUser::isAdmin(SessionUser::getStatus())) {
 			print '<div id="register">You are not allowed to see this page.</div>';
@@ -772,12 +819,16 @@ class User {
 				case 'listMembers' :
 					$key = (isset($_POST['select'])) ? Utils::post('select') : "";
 					$value = (isset($_POST['search'])) ? Utils::post('search') : "";
-					$userArray = User::getUsersFromKey($key, $value);
-					User::getMemberList($userArray);
+					$userArray = self::getUsersFromKey($key, $value);
+					if (count($userArray) < 1) {
+						self::getSearchFailed();
+						break;
+					}
+					self::getMemberList($userArray);
 					break;
 
 				case 'searchMembers' :
-					print self::getSearchForm();
+					self::getSearchForm();
 					break;
 
 				case 'settings' :
@@ -793,6 +844,10 @@ class User {
 					$j->writeFile();
 					Error::set('Settings Saved.');
 					header("Location: index.php?page=admin&action=settings");
+					break;
+
+				case 'messages' : 
+					self::getMessageList();
 					break;
 
 				default :
@@ -814,7 +869,7 @@ class User {
 									<td><a href="index.php?page=admin&action=searchMembers">Search Members</a></td>
 								</tr>
 								<tr>
-									<td><a href="index.php?page=profile&action=changeEmail">Manage Messages</a></td>
+									<td><a href="index.php?page=admin&action=messages">Manage Messages</a></td>
 								</tr>
 								<tr>
 									<td><a href="index.php?page=admin&action=settings">Manage Settings</a></td>

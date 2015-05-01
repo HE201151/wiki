@@ -29,7 +29,6 @@ if (!empty($_POST)) {
 			}
 			break;
 
-
 		case 'changePassword' :
 			try {
 				User::checkPassword(SessionUser::getUsername(), Utils::post('password'));
@@ -94,20 +93,23 @@ if (!empty($_POST)) {
 
 		case 'message' : 
 			try {
-				$mail = new Mail;
-				$mail->sendMailFromPost();
-				header("Location: index.php?page=contactDone");
+				if (isset($_GET['mid'])) {
+					Mail::reply(Utils::get('mid'));
+					header("Location: index.php?page=contact&mid=" . Utils::get('mid'));
+				} else {
+					$mail = new Mail;
+					$mail->sendMailFromPost();
+					header("Location: index.php?page=contactDone");
+				}
 			} catch (Exception $e) {
 				Error::exception($e);
 			}
 			break;
 
-
 		case 'login' :
 			$log = new Log;
     		header("Location: index.php");
     		break;
-
 
     	case 'register' :
     		$newUser = new Register;

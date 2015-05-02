@@ -7,6 +7,12 @@ include_once 'error.php';
 include_once 'user.php';
 
 class Mail {
+	const status = [ "noreply" => 0, "replied" => 1, "deleted" => 2 ];
+
+	public static function getStatus($id) {
+		return array_search($id, self::status);
+	}
+
 	public static function getContactForm() {
 		if (Utils::isLoggedIn()) {
 			if (isset($_GET['mid'])) {
@@ -78,24 +84,38 @@ class Mail {
 		}
 
 		print self::preSubmitValidation() . '
-		<form id="contact_form" action="post.php?action=message" method="POST" enctype="multipart/form-data">
-			<div class="row">
-				<label for="subject">Subject:</label><br />
-				<input id="subject" class="input" name="subject" type="text" value="" size="30" required/><br />
-			</div>';
+		<form id="contact_form" action="post.php?action=message" method="POST">
+			<table id="register" border="0" cellspacing="0" cellpadding="6" class="tborder">
+				<tbody>
+			            <tr>
+			                <td id="regtitle">Compose Message</td>
+			            </tr>
+			            <tr id="formcontent">
+			                <td>
+			                    <table cellpadding="6" cellspacing="0" width=100%>
+			                        <tbody>
+			                        	<tr>
+											<td><label for="subject">Subject:</label></td>
+											<td><input id="subject" class="input" name="subject" type="text" value="" required/></td>
+										</tr>';
 
-		print (!Utils::isLoggedIn()) ? 
-				'<div class="row">
-					<label for="email">Your email:</label><br />
-					<input colspan="2" id="email" class="input" name="email" type="text" value="" size="30" required/><br />
-				</div>'	: '';
-
-		print '<div class="row">
-				<label for="message">Your message:</label><br />
-				<textarea id="message" class="input" name="message" rows="7" cols="30" required></textarea><br />
-			</div>
+								print (!Utils::isLoggedIn()) ? 
+										'<tr>
+											<td><label for="email">Your email:</label></td>
+											<td><input colspan="2" id="email" class="input" name="email" type="text" value="" size="30" required/></td>
+										</tr>'	: '';
+								print '<tr>
+											<td><label for="message">Your message:</label></td>
+											<td><textarea id="message" class="input" name="message" rows="7" cols="30" required></textarea></td>
+										</tr>
+									</tbody>
+			                    </table>
+			                </td>
+			            </tr>
+			    </tbody>
+			</table>
 			<div align="center" id="submit">
-				<input id="submit_button" type="submit" value="Send email" />
+				<input id="submit_button" type="submit" value="Send Message" />
 			</div>
 		</form>	';
 	}
@@ -127,6 +147,10 @@ class Mail {
 
 	public static function getSuccessfulContactMessage() {
 		print '<div id="register">Message successfully sent.</div>';
+	}
+
+	public static function noPermission() {
+		print '<div id="register">Message not found</div>';
 	}
 
 	public function sendMailFromPost() {
@@ -177,6 +201,7 @@ class Mail {
 		if (empty($parent)) {
 			throw new Exception('empty parent');
 		}
+		/* select email and subject from parent */
 		$db = new db;
 		$db->request('SELECT email, subject FROM messages WHERE id = :parent;');
 		$db->bind(':parent', $parent);
@@ -186,6 +211,7 @@ class Mail {
 			throw new Exception('parent message not found');
 		}
 
+		/* insert new reply */
 		$db->request('INSERT INTO messages (subject, email, user_id, date, message, parent_id) VALUES (:subject, :email, :user_id, now(), :msg, :parent);');
 		$db->bind(':subject', $result['subject']);
 		$db->bind(':email', $result['email']);
@@ -194,8 +220,15 @@ class Mail {
 		$db->bind(':parent', $parent);
 		$db->doquery();
 
+		/* update parent message as replied */
+		$db->request('UPDATE messages SET status=:status where id=:id');
+		$db->bind(':status', self::status["replied"]);
+		$db->bind(':id', $parent);
+		$db->doquery();
+
 		$db = null;
 
+		/* send email with message */
 		try {
 			self::sendMail($result['email'], SessionUser::getEmail(), $result['subject'], Utils::post('message'), false);
 		} catch (Exception $e) {

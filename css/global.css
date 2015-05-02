@@ -268,6 +268,11 @@ td.trow input {
     width: 100%;
 }
 
+td.trowsmall {
+    text-align: center;
+    border-top: 1px solid white;
+}
+
 table.avatartable {
     width: 1px;
     margin-left: -6px;
@@ -288,4 +293,16 @@ td.datetd {
 
 tr.msgactions {
     float: right;
+}
+
+input#subject {
+    width: 100%;
+}
+
+textarea#message {
+    height: 200px;
+}
+
+form#sort {
+    display: inline;
 }

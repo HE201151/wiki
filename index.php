@@ -53,7 +53,7 @@
 
 				} else {
 					if (Utils::isLoggedIn()) {
-						echo SessionUser::getUserId() . SessionUser::getStatusDesc() . ' <a href="mailto:'. Utils::getSession("email").'">'. Utils::getSession("username").'</a>';
+						print '<div id="register">Welcome, ' . SessionUser::getUsername() . '. ' . SessionUser::getEmail() . '. You are an ' . SessionUser::getStatusDesc() . '.</div>';
 					} else {
 						echo "You are not logged in.";
 					}

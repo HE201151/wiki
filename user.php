@@ -1,6 +1,7 @@
 <?php
 
 include_once 'db.php';
+include_once 'mail.php';
 include_once 'hash.php';
 
 abstract class UserStatus {
@@ -766,15 +767,60 @@ class User {
 	}
 
 	public static function getMessageList() {
+		$request = 'SELECT id, subject, email, user_id, parent_id, date, status FROM messages ';
+		if (isset($_GET['sort'])) {
+			switch (Utils::get('sort')) {
+				case 'all' :
+					break;
+				case 'date_desc' :
+					$request .= 'ORDER BY date DESC';
+					break;
+				case 'date_asc' :
+					$request .= 'ORDER BY date ASC';
+					break;
+
+				case 'anon' :
+					$request .= 'WHERE user_id is null';
+					break;
+
+				case 'member' :
+					$request .= 'WHERE user_id is not null';
+					break;
+
+				case 'noreply' :
+					$request .= 'WHERE status = 0';
+					break;
+			}
+		}
+		
 		$db = new db;
-		$db->request('SELECT id, subject, email, user_id, parent_id, date FROM messages;');
+		$db->request($request);
 		$msgArray = $db->getAllAssoc();
 
 		print '
         <table id="register" border="0" cellspacing="0" cellpadding="6" class="tborder">
         <tbody>
             <tr>
-                <td id="regtitle">Messages</td>
+                <td id="regtitle">
+                	<span style="float: left;">Messages</span>
+                	<span style="float: right;">
+                		<span>Sort by :</span>
+                		<span>
+                			<form id="sort" action="index.php?page=admin&action=messages" method="get">
+                				<input type="hidden" name="page"  value="admin">
+								<input type="hidden" name="action" value="messages">
+                				<select id="sortsearch" name="sort" onchange="this.form.submit()" value="' . Utils::get('sort') .'">
+                					<option value="all">All messages</option>
+                					<option value="date_asc">Date, ascending</option>
+                					<option value="date_desc">Date, descending</option>
+                					<option value="anon">Anonymous Messages</option>
+                					<option value="member">Messages from members</option>
+                					<option value="noreply">Message with no replies</option>
+                				</select>
+                			</form>
+                		</span>
+                	</span> 
+                </td>
             </tr>
             <tr id="formcontent">
                 <td>
@@ -785,7 +831,8 @@ class User {
                             <td id="tcat">Subject</td>
                             <td id="tcat">Email</td>
                             <td id="tcat">Date</td>
-                            <td id="tcat">Parent</td>';
+                            <td id="tcat">Parent</td>
+                            <td id="tcat">Status</td>';
 
                             foreach ($msgArray as $key => $value) {
                             	$db->request('SELECT username FROM users WHERE id = (SELECT user_id FROM messages WHERE user_id = :uid LIMIT 1);');
@@ -796,7 +843,8 @@ class User {
                                             <td class="trow"><a href="index.php?page=contact&mid=' . $value['id'] . '">' . $value['subject'] . '</a></td>
                                             <td class="trow">' . $value['email'] . '</td>
                                             <td class="trow">' . $value['date'] . '</td>
-                                            <td class="trow">' . $value['parent_id'] . '</td>
+                                            <td class="trowsmall"><a href="index.php?page=contact&mid=' . $value['id'] . '">' . $value['parent_id'] . '</a></td>
+                                            <td class="trowsmall">' . Mail::getStatus($value['status']) . '</td>
                                         </tr>';
                             }
                         print '</tbody>
@@ -805,6 +853,11 @@ class User {
             </tr>
         </tbody>
         </table>';
+
+        if (isset($_GET['sort'])) {
+        	print '<script>document.getElementById("sortsearch").value = "' . Utils::get('sort') .'";</script>';
+        }
+
         $db = null;
 	}
 

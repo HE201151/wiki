@@ -809,7 +809,7 @@ class User {
                 			<form id="sort" action="index.php?page=admin&action=messages" method="get">
                 				<input type="hidden" name="page"  value="admin">
 								<input type="hidden" name="action" value="messages">
-                				<select id="sortsearch" name="sort" onchange="this.form.submit()" value="' . Utils::get('sort') .'">
+                				<select id="sortsearch" name="sort" onchange="this.form.submit()">
                 					<option value="all">All messages</option>
                 					<option value="date_asc">Date, ascending</option>
                 					<option value="date_desc">Date, descending</option>

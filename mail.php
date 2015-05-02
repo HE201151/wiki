@@ -164,9 +164,7 @@ class Mail {
 
 		$html = Jason::getOnce('msg_allow_html');
 
-		$subject = Jason::getOnce("banner") . ' - ';
-		$subject .= Utils::post("subject");
-
+		$subject = Utils::post("subject");
 		$message = Utils::post("message");
 
 		$headers  = "From: " . $from  . "\r\n";
@@ -178,15 +176,16 @@ class Mail {
 			$headers .= "Content-Type: text/plain; charset=ISO-8859-1\r\n";
 		}
 
-		mail($to, $subject, $message, $headers);
+		mail($to, Jason::getOnce("banner") . ' - ' . $subject, $message, $headers);
 
 		/* insert message into db */
 		$db = new db;
-		$db->request('INSERT INTO messages (subject, email, user_id, date, message) VALUES (:subject, :email, :user_id, now(), :msg);');
+		$db->request('INSERT INTO messages (subject, email, user_id, date, message, status) VALUES (:subject, :email, :user_id, now(), :msg, :status);');
 		$db->bind(':subject', $subject);
 		$db->bind(':email', $from);
 		$db->bind(':user_id', (!empty(SessionUser::getUserId())) ? SessionUser::getUserId() : null);
 		$db->bind(':msg', $message);
+		$db->bind(':status', self::status['noreply']);
 		$db->doquery();
 
 		$db = null;
@@ -212,12 +211,13 @@ class Mail {
 		}
 
 		/* insert new reply */
-		$db->request('INSERT INTO messages (subject, email, user_id, date, message, parent_id) VALUES (:subject, :email, :user_id, now(), :msg, :parent);');
+		$db->request('INSERT INTO messages (subject, email, user_id, date, message, parent_id, status) VALUES (:subject, :email, :user_id, now(), :msg, :parent, :status);');
 		$db->bind(':subject', $result['subject']);
 		$db->bind(':email', $result['email']);
 		$db->bind(':user_id', SessionUser::getUserId());
 		$db->bind(':msg', Utils::post('message'));
 		$db->bind(':parent', $parent);
+		$db->bind(':status', self::status['noreply']);
 		$db->doquery();
 
 		/* update parent message as replied */

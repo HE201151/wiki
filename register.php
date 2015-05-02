@@ -136,6 +136,23 @@ class Register {
 		</script>';
 	}
 
+	public static function validateSecretQuestion() {
+		print '<script>
+		$(function() {
+			$("#register").validate({
+				rules: {
+					question: "required",
+					answer: "required"
+				},
+				messages: {
+					question: "Please fill in the secret question.",
+					answer: "Please fill in the secret question answer."
+				}
+			});
+		});
+		</script>';
+	}
+
 	public static function getSuccessfulRegistrationMessage() {
 		print '<div id="register">Registration was successful, please check your email.</div>';
 	}
@@ -262,7 +279,7 @@ class Register {
 	}
 
 	private function getUserId() {
-		$this->db->request('SELECT id from users WHERE username = :username');
+		$this->db->request('SELECT id FROM users WHERE username = :username');
 		$this->db->bind(':username', $this->username);
 		$result = $this->db->getAssoc();
 		$this->id = $result['id'];
@@ -276,7 +293,7 @@ class Register {
 	}
 
 	public function getActivationCode() {
-		$this->db->request('SELECT activationCode FROM activations where users_id = :id');
+		$this->db->request('SELECT activationCode FROM activations WHERE users_id = :id');
 		$this->db->bind(':id', $this->id);
 		$result = $this->db->getAssoc();
 		return $result['activationCode'];
@@ -293,7 +310,7 @@ class Register {
 
 	private function insertUser() {
 		/* insert user in users table */
-		$this->db->request('INSERT into users (username, password, created, email, status) VALUES (:username, :password, now(), :email, :status);');
+		$this->db->request('INSERT INTO users (username, password, created, email, status) VALUES (:username, :password, now(), :email, :status);');
 		$this->db->bind(':username', $this->username);
 		$this->db->bind(':password', $this->password);
 		$this->db->bind(':email', $this->email);
@@ -307,28 +324,83 @@ class Register {
 		$this->sendActivationMail();
 	}
 
+	public static function getSecretQuestionForm($uid, $code) {
+		print '
+		<form id="register" action="index.php?page=activation&activationCode=' . $code . '" method="POST">
+			<input type="hidden" name="uid" value="' . $uid . '">
+			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
+				<tbody>
+			            <tr>
+			                <td id="regtitle">Secret Question</td>
+			            </tr>
+			            <tr id="formcontent">
+			                <td>
+			                    <table cellpadding="6" cellspacing="0" width=100%>
+			                        <tbody>
+			                        	<tr>
+			                        		Please fill in a secret question and answer, this will help you later if you forget your password.
+			                        	</tr>
+			                        	<tr>
+											<td><label for="question">Secret Question:</label></td>
+											<td><input id="question" class="input" name="question" type="text" value="" required /></td>
+										</tr>
+											<td><label for="answer">Secret Answer:</label></td>
+											<td><input id="answer" class="input" name="answer" type="text" value="" required /></td>
+										</tr>
+									</tbody>
+			                    </table>
+			                </td>
+			            </tr>
+			    </tbody>
+			</table>
+			<div align="center" id="submit">
+				<input id="submit_button" type="submit" value="submit and activate me" />
+			</div>
+		</form>	';
+		self::validateSecretQuestion();
+	}
+
 	public static function activate() {
+		if (isset($_POST['question']) && isset($_POST['answer']) && isset($_POST['uid'])) {
+			User::registerQuestions(Utils::post('uid'), Utils::post('question'), Utils::post('answer'));
+		}
+
 		$db = new db;
 		$db->request('SELECT users_id, activationCode FROM activations WHERE activationCode = :code');
 		$db->bind(':code', Utils::get('activationCode'));
 		$result = $db->getAssoc();
 		if (!empty($result)) {
 			$status = User::getStatusFromActivationCode($result['activationCode']);
-			User::toggleReactivation($result['users_id'], $status);
-			if ($result['users_id'] === SessionUser::getUserId()) {
+			$uid = $result['users_id'];
+			
+			if (!User::isRegistered($status)) {
+				User::toggleReactivation($result['users_id'], $status);
+			} else {
+				if (isset($_POST['question'])) {
+					User::changeStatus($uid, [ UserStatus::Member ]);
+				}
+			}
+
+			if ($uid === SessionUser::getUserId()) {
 				Utils::setSession('status', $status);
 			}
+
+			// if first activation
+			if (User::isRegistered($status) && !isset($_POST['question'])) {
+				self::getSecretQuestionForm($uid, $result['activationCode']);
+				return;
+			} else {
+				// delete activation code
+				$db->request('DELETE FROM activations WHERE users_id = :user');
+				$db->bind(':user', $uid);
+				$db->doquery();
+
+				// add activation date to user
+				$db->request('UPDATE users SET activated=now() WHERE id = :user');
+				$db->bind(':user', $uid);
+				$db->doquery();
+			}
 			self::getSuccessfulActivationMessage();
-
-			// delete activation code
-			$db->request('DELETE FROM activations where users_id = :user');
-			$db->bind(':user', $result['users_id']);
-			$db->doquery();
-
-			// add activation date to user
-			$db->request('UPDATE users SET activated=now() WHERE id = :user');
-			$db->bind(':user', $result['users_id']);
-			$db->doquery();
 		} else {
 			self::getWrongActivationMessage();
 		}

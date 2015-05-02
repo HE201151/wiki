@@ -22,9 +22,11 @@ abstract class UserStatus {
 						self::Reactivation, self::ForgotPassword, self::Frozen ];
 
 	const canChangePassword = [ self::Administrator, self::Moderator, self::Member,
-								self::Froze, self::Reactivation ];
+								self::Frozen, self::Reactivation ];
 
 	const canEditProfile = [ self::Administrator, self::Moderator, self::Member, self::Reactivation ];
+
+	const canWiki = [ self::Administrator, self::Moderator, self::Member, self::ForgotPassword ];
 
 	const profileRequest = 'SELECT id, avatar, username, status, activated, lastconnect FROM users ';
 }
@@ -43,8 +45,12 @@ class SessionUser {
 		return Utils::getSession('status');
 	}
 
-	public static function isAdmin($status) {
-		return (Utils::in_array_any($status, [ UserStatus::Administrator ]));
+	public static function isAdmin() {
+		if (Utils::isLoggedin()) {
+			return (Utils::in_array_any(self::getStatus(), [ UserStatus::Administrator ]));
+		} else {
+			return false;
+		}
 	}
 
 	public static function getUserId() {
@@ -116,6 +122,10 @@ class User {
 
 	public function getStatusDesc() {
 		return Utils::arrayToString($this->getStatus());
+	}
+
+	public static function isRegistered($status) {
+		return (Utils::in_array_any($status, [ UserStatus::Registered ]));
 	}
 
 	public static function changeStatus($uid, $status) {
@@ -689,6 +699,16 @@ class User {
 		return $imagePath;
 	}
 
+	public static function registerQuestions($uid, $question, $answer) {
+		$db = new db;
+		$db->request('UPDATE users SET secret_question = :se, secret_question_answer = :sa WHERE id = :uid;');
+		$db->bind(':se', $question);
+		$db->bind(':sa', Hash::get($answer));
+		$db->bind(':uid', $uid);
+		$db->doquery();
+		$db = null;
+	}
+
 	public static function getMemberList($userArray) {
 		print '<table id="register" border="0" cellspacing="0" cellpadding="6" class="tborder">
 			<tbody>
@@ -804,7 +824,7 @@ class User {
                 <td id="regtitle">
                 	<span style="float: left;">Messages</span>
                 	<span style="float: right;">
-                		<span>Sort by :</span>
+                		<span>Sort by / Filter :</span>
                 		<span>
                 			<form id="sort" action="index.php?page=admin&action=messages" method="get">
                 				<input type="hidden" name="page"  value="admin">

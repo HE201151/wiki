@@ -299,10 +299,22 @@ input#subject {
     width: 100%;
 }
 
+input#email {
+    width: 100%;
+}
+
 textarea#message {
     height: 200px;
 }
 
 form#sort {
     display: inline;
+}
+
+input#question {
+    width: 100%;
+}
+
+input#answer {
+    width: 100%;
 }

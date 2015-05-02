@@ -14,7 +14,8 @@ class Mail {
 	}
 
 	public static function getContactForm() {
-		if (Utils::isLoggedIn()) {
+		// XXX make conversations user specific
+		if (SessionUser::isAdmin()) {
 			if (isset($_GET['mid'])) {
 				$db = new db;
 				$db->request('SELECT id, user_id, subject, message, date FROM messages WHERE id = :id OR parent_id = :id ORDER BY date ASC');
@@ -102,7 +103,7 @@ class Mail {
 								print (!Utils::isLoggedIn()) ? 
 										'<tr>
 											<td><label for="email">Your email:</label></td>
-											<td><input colspan="2" id="email" class="input" name="email" type="text" value="" size="30" required/></td>
+											<td><input colspan="2" id="email" class="input" name="email" type="text" value="" required/></td>
 										</tr>'	: '';
 								print '<tr>
 											<td><label for="message">Your message:</label></td>

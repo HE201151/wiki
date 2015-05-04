@@ -318,3 +318,10 @@ input#question {
 input#answer {
     width: 100%;
 }
+
+span.resetpw {
+    font-size: 12px;
+    float: right;
+    margin-top: 7px;
+    margin-right: 7px;
+}

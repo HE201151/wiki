@@ -128,6 +128,14 @@ class User {
 		return (Utils::in_array_any($status, [ UserStatus::Registered ]));
 	}
 
+	public static function isForgotPassword($status) {
+		return (Utils::in_array_any($status, [ UserStatus::ForgotPassword ]));
+	}
+
+	public static function isReactivation($status) {
+		return (Utils::in_array_any($status, [ UserStatus::Reactivation ]));
+	}
+
 	public static function changeStatus($uid, $status) {
 		$db = new db;
 		$db->request('UPDATE users SET status = :status WHERE id = :id');
@@ -147,6 +155,48 @@ class User {
 		}
 
 		self::changeStatus($uid, $status);
+	}
+
+	public static function toggleForgotPassword($uid, $curStatus) {
+		$isForgotPassword = in_array(UserStatus::ForgotPassword, $curStatus);
+		$isReactivation = in_array(UserStatus::Reactivation, $curStatus);
+		if ($isForgotPassword && !$isReactivation) {
+			$status = [ reset($curStatus) ];
+		} else if ($isForgotPassword && $isReactivation) {
+			$status = [ reset($curStatus), UserStatus::Reactivation ];
+		} else if (!$isForgotPassword && $isReactivation) {
+			$status = [ $curStatus[0], UserStatus::Reactivation, UserStatus::ForgotPassword ];
+		} else {
+			$status = [ $curStatus[0], UserStatus::ForgotPassword ];
+		}
+
+		self::changeStatus($uid, $status);
+
+		return $status;
+	}
+
+	public static function getSecretQuestion($uid) {
+		$db = new db;
+		$db->request('SELECT secret_question FROM users WHERE id = :uid;');
+		$db->bind(':uid', $uid);
+		$result = $db->getAssoc();
+		if (empty($result)) {
+			throw new Exception('Failed to get secret question.');
+		}
+		$db = null;
+		return $result['secret_question'];
+	}
+
+	public static function matchSecretQuestion($uid, $answer) {
+		$db = new db;
+		$db->request('SELECT 1 FROM users WHERE id = :uid AND secret_question_answer = :answer;');
+		$db->bind(':uid', $uid);
+		$db->bind('answer', $answer);
+		$result = $db->getAssoc();
+		if (empty($result)) {
+			throw new Exception('Wrong answer.');
+		}
+		$db = null;
 	}
 
 	public static function canLogin($status) {

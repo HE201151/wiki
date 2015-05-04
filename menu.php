@@ -18,7 +18,8 @@ class Menu {
 				<form id="loginForm" method="post" action="post.php?action=login">
 					<input id="username" placeholder="user name" type="text" name="username" required>
 					<input id="password" placeholder="password" type="password" name="password" required>
-					<input type="submit" name="login" value="login">
+					<input type="submit" name="login" value="login"><br />
+					<span class="resetpw"><a href="index.php?page=resetpw">Lost your password ?</a></span>
 				</form>
 				<script>
 				$(function() {

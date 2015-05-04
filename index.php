@@ -2,6 +2,7 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<title>Projet PMM</title>
+		<link href="img/favicon.ico" rel="shortcut icon" type="image/x-icon" />
 		<link rel="stylesheet" type="text/css" href="css/global.css" />
 		<script src="js/jquery-1.11.2.min.js"></script>
 		<script src="js/jquery.validate.min.js"></script>
@@ -50,6 +51,10 @@
 				} else if (Utils::page() === "admin") {
 					include_once 'user.php';
 					User::getAdmin();
+
+				} else if (Utils::page() === "resetpw") {
+					include_once 'register.php';
+					Register::resetPassword();
 
 				} else {
 					if (Utils::isLoggedIn()) {

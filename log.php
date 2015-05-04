@@ -23,14 +23,25 @@ class Log {
                 Error::set("This user can't login.");
                 return;
             }
+            if (User::isForgotPassword(Utils::stringToArray($result['status']))) {
+                try {
+                    $status = User::toggleForgotPassword($result['id'], Utils::stringToArray($result['status']));
+                    if (!User::isReactivation(Utils::stringToArray($result['status']))) {
+                        Register::deleteActivationCode($result['id']);
+                    }
+                    Error::set('It looks like you are logging in with your old password, your password reset request will be removed.');
+                } catch (Exception $e) {
+                    Error::exception($e);
+                }
+            } else {
+                $status = Utils::stringToArray($result['status']);
+            }
             Utils::setSession("username", $result['username']);
             Utils::setSession("email", $result['email']);
             // XXX why isn't PDO setting "0" to session
             Utils::setSession("user_id", $result['id'] === "0" ? "admin" : $result['id']);
-            Utils::setSession("status", Utils::stringToArray($result['status']));
+            Utils::setSession("status", $status);
             Utils::setSession("avatar", $result['avatar']);
-
-            Error::alliswell();
 
             Utils::setSession('is_logged_in', true);
             $db->request('UPDATE users SET lastconnect=now() WHERE username = :username');
@@ -38,6 +49,35 @@ class Log {
             $db->doquery();
         } else {
             Error::set("wrong username or password");
+        }
+    }
+
+    public static function autolog($uid) {
+        $db = new db;
+        $db->request('SELECT id, username, email, status, avatar FROM users WHERE id = :uid');
+        $db->bind(':uid', $uid);
+        $result = $db->getAssoc();
+
+        if (!empty($result)) {
+            if (!User::canLogin(Utils::stringToArray($result['status']))) {
+                Error::set("This user can't login.");
+                return;
+            }
+            $status = Utils::stringToArray($result['status']);
+            Utils::setSession("username", $result['username']);
+            Utils::setSession("email", $result['email']);
+            // XXX why isn't PDO setting "0" to session
+            Utils::setSession("user_id", $result['id'] === "0" ? "admin" : $result['id']);
+            Utils::setSession("status", $status);
+            Utils::setSession("avatar", $result['avatar']);
+
+            Utils::setSession('is_logged_in', true);
+            $db->request('UPDATE users SET lastconnect=now() WHERE username = :username');
+            $db->bind(':username', Utils::getSession("username"));
+            $db->doquery();
+        } else {
+            print '<div id="register">Failed to login</div>';
+            Error::set("Failed to login");
         }
     }
 

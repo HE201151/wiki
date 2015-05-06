@@ -13,6 +13,10 @@ class Log {
         $username = Utils::handleUsers();
 
         $db = new db;
+        if ($db == null) {
+            Utils::goBack();
+            return;
+        }
         $db->request('SELECT id, username, email, status, avatar FROM users WHERE username = :name AND password = :pass');
         $db->bind(':name', $username);
         $db->bind(':pass', Hash::get(Utils::post('password')));

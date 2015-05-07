@@ -112,6 +112,16 @@ class Parser {
 			'html' => '<span>$1</span>',
 			'cont' => false,
 		],
+		't' => [
+			'code' => '/\[\s*[t]{1}\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\]/',
+			'html' => '<table border="$1">$2</table>',
+			'cont' => false,
+		],
+		'th' => [
+			'code' => '/\[\s*(th){1}\s*\|\s*(.*?)\s*\]/',
+			'html' => '<the>$2</the>',
+			'cont' => false,
+		],
 	];
 
 	public static function do_li($elements) {
@@ -137,9 +147,31 @@ class Parser {
 		return $string;
 	}
 
+	public static function do_th($list) {
+		$string = "";
+		foreach ($list as $th) {
+			$string .= '<th>' . $th . '</th>';
+		}
+		return $string;
+	}
+
+	public static function do_td($list) {
+		$string = '<tr>';
+		foreach ($list as $td) {
+			$string .= '<td>' . $td . '</td>';
+		}
+		return $string . '</tr>';
+	}
+
 	public static function dolist($in, $str, $tag) {
 		$list = explode('|', $str);
-		$listitems = self::do_li($list);
+		if ($tag === 'ol' || $tag == 'ul') {
+			$listitems = self::do_li($list);
+		} else if ($tag === 'th') {
+			$listitems = self::do_th($list);
+		} else if ($tag === 'td') {
+			$listitems = self::do_td($list);
+		}
 		$in = str_replace($str, $listitems, $in);
 		return $in;
 	}
@@ -233,6 +265,24 @@ class Parser {
 			}
 		}
 
+		// th tags
+		$count = preg_match_all('/<the>\s*(.*?)\s*<\/the>/', $in, $matches);
+		if ($count > 0) {
+			foreach ($matches[1] as $string) {
+				$in = self::dolist($in, $string, 'th');
+			}
+			$in = preg_replace('/<the>/', '<tr>', $in);
+			$in = preg_replace('/<\/the>/', '</tr>', $in);
+		}
+
+		// td tags
+		$count = preg_match_all('/<table.*?>\s*.*?\s*<\/tr>\s*(.*?)\s*<\/table>/', $in, $matches);
+		if ($count > 0) {
+			foreach ($matches[1] as $string) {
+				$in = self::dolist($in, $string, 'td');
+			}
+		}
+
 		// special chars
 		$in = preg_replace('/\\\\/', '',  $in);
 		// sometimes I get two <li> for some reason... ugly fix.
@@ -240,9 +290,7 @@ class Parser {
 		return $in;
 	}
 }
+//$tabletest = '[t|2|[th|t1|t2|t3]one|two|three]';
 
-$multitest = file_get_contents('toparse');
-//print Parser::get($multitest);
-file_put_contents('index.html', Parser::get($multitest));
 
 ?>

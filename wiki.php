@@ -11,7 +11,7 @@ class Wiki {
 
 	public static function updateWiki($id, $content) {
 		$db = new db;
-		$db->request('UPDATE wiki SET msgContent = :content WHERE msgId = :id;');
+		$db->request('UPDATE wiki SET msgContent = :content, msgLastModif = now() WHERE msgId = :id;');
 		$db->bind(':id', $id);
 		$db->bind(':content', $content);
 		$db->doquery();

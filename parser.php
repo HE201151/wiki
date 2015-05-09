@@ -57,6 +57,11 @@ class Parser {
 			'html' => '<hr>',
 			'cont' => false,
 		],
+		'br' => [
+			'code' => '/\[\s*(br){1}\s*\]/',
+			'html' => '<br>',
+			'cont' => false,
+		],
 		'a' => [
 			'code' => '/\[\s*a{1}\s*\|\s*(.*?)\|\s*(.*?)\]/',
 			'html' => '<a href="$1">$2</a>',
@@ -316,6 +321,7 @@ class Parser {
 
 // invented table markup :
 //$tabletest = '[t|2|[th|t1|t2|t3]|[ti|one|two|three]|[ti|four|five|six]|[ti|seven|eight|nine]]';
-//print Parser::get($tabletest);
+//$deltest = '[p|Et encore du [b|gras [u|souligné]][br]et du[#F00|rouge]]';
+//print Parser::get($deltest);
 
 ?>

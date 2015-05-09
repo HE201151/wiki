@@ -56,12 +56,22 @@
 					include_once 'register.php';
 					Register::resetPassword();
 
+				} else if (Utils::page() === "wiki") {
+					include_once 'wiki.php';
+					if (isset($_GET['wiki'])) {
+						Wiki::getWiki(Utils::get('wiki'));
+					} else {
+						Wiki::getAllWikis();
+					}
+
 				} else {
+					include_once 'wiki.php';
 					if (Utils::isLoggedIn()) {
 						print '<div id="register">Welcome, ' . SessionUser::getUsername() . '. ' . SessionUser::getEmail() . '. You are an ' . SessionUser::getStatusDesc() . '.</div>';
 					} else {
 						echo "You are not logged in.";
 					}
+					Wiki::getAllWikis();
 				}
 	 			?>
 			</article>

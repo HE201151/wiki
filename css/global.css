@@ -324,3 +324,7 @@ span.resetpw {
     margin-top: 7px;
     margin-right: 7px;
 }
+
+textarea#wikicontent {
+    width: 100%;
+}

@@ -12,15 +12,15 @@ class Utils {
 	}
 
 	public static function isPost($field) {
-		return (isset($_POST[$field]) && !empty($_POST[$field]));
+		return (isset($_POST[$field]));
 	}
 
 	public static function isGet($field) {
-		return (isset($_GET[$field]) && !empty($_GET[$field]));
+		return (isset($_GET[$field]));
 	}
 
 	public static function isSession($field) {
-		return (isset($_SESSION[$field]) && !empty($_SESSION[$field]));
+		return (isset($_SESSION[$field]));
 	}
 
 	public static function post($field) {

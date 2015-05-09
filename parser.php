@@ -122,12 +122,16 @@ class Parser {
 			'html' => '<the>$2</the>',
 			'cont' => false,
 		],
+		'ti' => [
+			'code' => '/\[\s*(ti){1}\s*\|\s*(.*?)\s*\]/',
+			'html' => '<ti>$2</ti>',
+			'cont' => false,
+		],
 	];
 
 	public static function do_li($elements) {
 		$string = "";
 		foreach ($elements as $li) {
-			// if <li> is a list itself XXX todo ol ol2
 			// embedded ul's
 			if (preg_match('/\s*<ul>\s*(.*?)\s*<\/ul>\s*/', $li)) {
 				$li = preg_replace('/\s*<ul>\s*(.*?)\s*<\/ul>\s*/', '<ul><li>$1</li></ul>', $li);
@@ -156,11 +160,19 @@ class Parser {
 	}
 
 	public static function do_td($list) {
-		$string = '<tr>';
+		$string = '';
 		foreach ($list as $td) {
 			$string .= '<td>' . $td . '</td>';
 		}
-		return $string . '</tr>';
+		return $string;
+	}
+
+	public static function do_tr($list) {
+		$string = '';
+		foreach ($list as $tr) {
+			$string .= '<tr>' . $tr . '</tr>';
+		}
+		return $string;
 	}
 
 	public static function dolist($in, $str, $tag) {
@@ -171,6 +183,8 @@ class Parser {
 			$listitems = self::do_th($list);
 		} else if ($tag === 'td') {
 			$listitems = self::do_td($list);
+		} else if ($tag === 'tr') {
+			$listitems = self::do_tr($list);
 		}
 		$in = str_replace($str, $listitems, $in);
 		return $in;
@@ -275,11 +289,20 @@ class Parser {
 			$in = preg_replace('/<\/the>/', '</tr>', $in);
 		}
 
+		// tr tags
+		$count = preg_match_all('/<ti>\s*(.*?)\s*<\/ti>/', $in, $matches);
+		if ($count > 0) {
+			foreach ($matches[0] as $string) {
+				$in = self::dolist($in, $string, 'td');
+			}
+			$in = preg_replace('/<[\/]{0,1}ti>/', '', $in);
+		}
+
 		// td tags
 		$count = preg_match_all('/<table.*?>\s*.*?\s*<\/tr>\s*(.*?)\s*<\/table>/', $in, $matches);
 		if ($count > 0) {
 			foreach ($matches[1] as $string) {
-				$in = self::dolist($in, $string, 'td');
+				$in = self::dolist($in, $string, 'tr');
 			}
 		}
 
@@ -290,7 +313,9 @@ class Parser {
 		return $in;
 	}
 }
-//$tabletest = '[t|2|[th|t1|t2|t3]one|two|three]';
 
+// invented table markup :
+//$tabletest = '[t|2|[th|t1|t2|t3]|[ti|one|two|three]|[ti|four|five|six]|[ti|seven|eight|nine]]';
+//print Parser::get($tabletest);
 
 ?>

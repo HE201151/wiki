@@ -1,5 +1,7 @@
 <?php
 
+include_once 'wiki.php';
+
 class Parser {
 	const tags = [
 		'comment' => [
@@ -105,11 +107,6 @@ class Parser {
 		'divbgimg' => [
 			'code' => '/\[\s*div{1}\s*\|\s*(.*?)\s*\|\s*(.*)\s*\]/',
 			'html' => '<div style="background: url($1);">$2</div>',
-			'cont' => false,
-		],
-		'keyword' => [
-			'code' => '/\[\[\s*(.*?)\s*\]\]/',
-			'html' => '<a target="_blank" href="keyword=nonekeyword=pageKeyword">$1</a>',
 			'cont' => false,
 		],
 		's' => [ // ??
@@ -230,8 +227,17 @@ class Parser {
 
 	public static function get($in) {
 		// first match words so our brackets searcher doesn't get confused
-		while (preg_match(self::tags['keyword']['code'], $in)) {
-			$in = preg_replace(self::tags['keyword']['code'], self::tags['keyword']['html'], $in);
+		$count = preg_match_all('/\[\[\s*(.*?)\s*\]\]/', $in, $matches);
+		if ($count > 0) {
+			foreach ($matches[0] as $string) {
+				$oldstring = $string;
+				$string = preg_replace('/(\[|\])/', '', $string);
+				if (Wiki::findWord($string)) {
+					$in = str_replace($oldstring, '<a href="index.php?page=wiki&keyword='.$string.'">'.$string.'</a>', $in);
+				} else {
+					$in = str_replace($oldstring, '<a style="color: #FF5252;" href="index.php?page=wiki&keyword='.$string.'">'.$string.'</a>', $in);
+				}
+			}
 		}
 
 		// other tags

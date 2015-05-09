@@ -17,6 +17,14 @@ class Wiki {
 		$db->doquery();
 	}
 
+	public static function findWord($word) {
+		$db = new db;
+		$db->request("SELECT 1 FROM wiki WHERE msgKeyword = :word");
+		$db->bind(':word', $word);
+		$result = $db->getAssoc();
+		return (!empty($result));
+	}
+
 	/* function serving everyone, simply list wikis available to everyone */
 	public static function getAllWikis() {
 		$db = new db;
@@ -147,4 +155,5 @@ class Wiki {
 		}
 	}
 }
+
 ?>

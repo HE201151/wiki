@@ -100,8 +100,42 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (0,'admin','d078a412258074c64516d41274720c502c66c6bdc7e02b73a95951ed018413e236a48dd69d0aeb624ccba78d76c22708c13d7a47abb786baa3d38461436a10a6','2015-04-29 16:33:50','test@mail.comc','2015-05-03 23:43:40','admin','2015-04-29 16:34:39','upload/avatar/admin_1426036538530.jpg',NULL,NULL),(17,'youri','17f96f0b7bf4369b091e0f9c321b4461967e323e53cc2f23226a05fea54237cda0a36260b505a93666aa3ce5519738e30d1f10c7192135d48e7d5a729e9c5072','2015-04-28 13:35:51','c@c.c','2015-05-01 16:24:29','member','2015-04-30 04:04:24','upload/avatar/17_4bb.png',NULL,NULL),(18,'test','05a1db76c6f36dd66b61967b67fdfdae8b6050f42908c1b40836d5235dae621ef147e30dadb2a63354ca9d3a15495dfe95048e3cf3694716f6682638298ae467','2015-04-30 04:21:29','youri.mout@gmail.com','2015-05-03 19:32:13','member','2015-05-02 13:28:55','upload/avatar/18_mini.jpg','test','ee26b0dd4af7e749aa1a8ee3c10ae9923f618980772e473f8819a5d4940e0db27ac185f8a0e1d5f84f88bc887fd67b143732c304cc5fa9ad8e6f57f50028a8ff'),(19,'pepe','d078a412258074c64516d41274720c502c66c6bdc7e02b73a95951ed018413e236a48dd69d0aeb624ccba78d76c22708c13d7a47abb786baa3d38461436a10a6','2015-04-30 04:28:01','t@m.com','0000-00-00 00:00:00','registered','2015-05-02 12:11:45','upload/avatar/19_10932388_423147147837341_576471532_n.jpg','test','ee26b0dd4af7e749aa1a8ee3c10ae9923f618980772e473f8819a5d4940e0db27ac185f8a0e1d5f84f88bc887fd67b143732c304cc5fa9ad8e6f57f50028a8ff'),(20,'dwarf','d078a412258074c64516d41274720c502c66c6bdc7e02b73a95951ed018413e236a48dd69d0aeb624ccba78d76c22708c13d7a47abb786baa3d38461436a10a6','2015-05-02 11:32:42','yrmt@edgebsd.org','0000-00-00 00:00:00','registered','2015-05-02 12:08:24',NULL,'test','ee26b0dd4af7e749aa1a8ee3c10ae9923f618980772e473f8819a5d4940e0db27ac185f8a0e1d5f84f88bc887fd67b143732c304cc5fa9ad8e6f57f50028a8ff'),(21,'re','d078a412258074c64516d41274720c502c66c6bdc7e02b73a95951ed018413e236a48dd69d0aeb624ccba78d76c22708c13d7a47abb786baa3d38461436a10a6','2015-05-02 12:06:52','test@mail.comm','0000-00-00 00:00:00','registered','2015-05-02 12:07:11',NULL,NULL,NULL);
+INSERT INTO `users` VALUES (0,'admin','d078a412258074c64516d41274720c502c66c6bdc7e02b73a95951ed018413e236a48dd69d0aeb624ccba78d76c22708c13d7a47abb786baa3d38461436a10a6','2015-04-29 16:33:50','test@mail.comc','2015-05-14 15:05:45','admin','2015-04-29 16:34:39','upload/avatar/admin_1426036538530.jpg',NULL,NULL),(17,'youri','d078a412258074c64516d41274720c502c66c6bdc7e02b73a95951ed018413e236a48dd69d0aeb624ccba78d76c22708c13d7a47abb786baa3d38461436a10a6','2015-04-28 13:35:51','youri.mout@gmail.com','2015-05-14 14:34:13','member','2015-05-04 13:58:08','upload/avatar/17_4bb.png','test','EE26B0DD4AF7E749AA1A8EE3C10AE9923F618980772E473F8819A5D4940E0DB27AC185F8A0E1D5F84F88BC887FD67B143732C304CC5FA9AD8E6F57F50028A8FF'),(18,'test','d078a412258074c64516d41274720c502c66c6bdc7e02b73a95951ed018413e236a48dd69d0aeb624ccba78d76c22708c13d7a47abb786baa3d38461436a10a6','2015-04-30 04:21:29','yrmt@edgebsd.org','2015-05-04 13:11:43','member','2015-05-02 13:28:55','upload/avatar/18_mini.jpg','test','ee26b0dd4af7e749aa1a8ee3c10ae9923f618980772e473f8819a5d4940e0db27ac185f8a0e1d5f84f88bc887fd67b143732c304cc5fa9ad8e6f57f50028a8ff'),(19,'pepe','d078a412258074c64516d41274720c502c66c6bdc7e02b73a95951ed018413e236a48dd69d0aeb624ccba78d76c22708c13d7a47abb786baa3d38461436a10a6','2015-04-30 04:28:01','t@m.com','0000-00-00 00:00:00','registered','2015-05-02 12:11:45','upload/avatar/19_10932388_423147147837341_576471532_n.jpg','test','ee26b0dd4af7e749aa1a8ee3c10ae9923f618980772e473f8819a5d4940e0db27ac185f8a0e1d5f84f88bc887fd67b143732c304cc5fa9ad8e6f57f50028a8ff'),(20,'dwarf','d078a412258074c64516d41274720c502c66c6bdc7e02b73a95951ed018413e236a48dd69d0aeb624ccba78d76c22708c13d7a47abb786baa3d38461436a10a6','2015-05-02 11:32:42','yrmt@edgebsd.org','0000-00-00 00:00:00','registered','2015-05-02 12:08:24',NULL,'test','ee26b0dd4af7e749aa1a8ee3c10ae9923f618980772e473f8819a5d4940e0db27ac185f8a0e1d5f84f88bc887fd67b143732c304cc5fa9ad8e6f57f50028a8ff'),(21,'re','d078a412258074c64516d41274720c502c66c6bdc7e02b73a95951ed018413e236a48dd69d0aeb624ccba78d76c22708c13d7a47abb786baa3d38461436a10a6','2015-05-02 12:06:52','test@mail.comm','0000-00-00 00:00:00','registered','2015-05-02 12:07:11',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `wiki`
+--
+
+DROP TABLE IF EXISTS `wiki`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `wiki` (
+  `msgId` int(11) NOT NULL AUTO_INCREMENT,
+  `authorId` int(11) DEFAULT NULL,
+  `destId` int(11) DEFAULT NULL,
+  `msgSubject` varchar(100) NOT NULL,
+  `msgContent` mediumtext NOT NULL,
+  `msgDateCrea` datetime NOT NULL,
+  `msgParentId` int(11) DEFAULT NULL,
+  `msgEmail` varchar(50) DEFAULT NULL,
+  `msgSubjectId` int(11) DEFAULT NULL,
+  `msgPageId` int(11) DEFAULT NULL,
+  `msgLastModif` datetime NOT NULL,
+  `msgKeyword` varchar(50) NOT NULL,
+  PRIMARY KEY (`msgId`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `wiki`
+--
+
+LOCK TABLES `wiki` WRITE;
+/*!40000 ALTER TABLE `wiki` DISABLE KEYS */;
+INSERT INTO `wiki` VALUES (1,17,NULL,'test wiki','[3|title][n]\r\n\r\n   [1|Titre principal][2|Titre secondaire]\r\n   [p|Voici du texte.][p|Et encore du [b|gras [u|souligneÌ]][br]et du[#F00|rouge]]\r\n[p|this is a [b|test] [i|wiki], check dat [[word]] and [[dis]] one, [[test]] word. [ul|amazing|thing|three[ol|t|t|t]|four]]\r\n\r\n[#343434| \\\\        test]\r\n\r\n[t|3|[th|[#88FFFF|t1]|t2|t3]|[ti|[#00FFFF|one]|[i|two]|three]|[ti|four|five|six]|[ti|seven|eight|nine]]\r\n[#ffff00|[i|[u|muh]] markup]%[h][bg|#212121|[a|http://netbsd.org|linkalink]]\r\n[n]\r\n[img|http://netbsd.org/images/NetBSD-smaller.png|]\r\n[br]\r\n[b|s[i|u][u|p][#FF0000|e][[r]]  [[test]]]\r\n[br]\r\n[ul|un||d[b|eu]x|[ul|trois]|qu[s|atr]e [[mot]]]\r\n[bg|#dfd|avant[ol|a1|b2]aprÃ¨s]\r\n[div|#ddf|		\r\n[ol_|i|-5|x|y|z]\r\n]\r\n[div|	http://www.webweaver.nu/clipart/img/web/backgrounds/halloween/ghosts.gif |	\r\n[#ff0|[ol_|a|0|[ol|a1|[#fff|b2]]|[ul|1|2|3]|z]]\r\n]\r\n\'\"&<> \\[\\]\\^\\|\r\nrien[[premier mot]] [b|gras] [[deuxiÃ¨me]][h][bg|#dfd|toto]\r\n[u|soulignÃ©] [[troisiÃ¨me]][n]truc [i|ita[#F0F|lique]]\r\n[b|bbb[u|uuu[i|iii]bbb[[quatri Ã¨me]]bb]]\r\n[ a| ici |lien ]\r\n[img | http://www.spirou.com/boutique/client/cache/produit/384_____SPIST01701_431.jpg  | zorglub  ]\r\n[br]\r\n<[h]\r\n>[h]\r\n[[h]\r\n][h]\r\n\\[h]\r\n\\\\[h]\r\n\\[[h]\r\n\\][h]\r\n\\|[h]\r\n|[h]\r\n\\^[h]\r\n^mot^mot','2015-05-09 13:54:58',NULL,'youri.mout@gmail.com',NULL,NULL,'2015-05-14 20:28:36','test');
+/*!40000 ALTER TABLE `wiki` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -113,4 +147,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-05-03 23:53:57
+-- Dump completed on 2015-05-14 20:41:33

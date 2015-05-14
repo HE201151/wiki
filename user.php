@@ -53,6 +53,10 @@ class SessionUser {
 		}
 	}
 
+	public static function canWiki() {
+		return (Utils::in_array_any(self::getStatus(), UserStatus::canWiki));
+	}
+
 	public static function getUserId() {
 		return Utils::getSession('user_id');
 	}
@@ -251,17 +255,19 @@ class User {
 		return $result['avatar'];
 	}
 
-	public static function getUsersFromKey($key, $value) {
+	public static function getUsersFromKey($key, $value, $exact) {
 		$db = new db;
 
 		$request = UserStatus::profileRequest;
 
+		$match = $exact ? " = :value;" : " like concat('%', :value, '%');";
+
 		if ($key === 'username') {
-			$request .= 'WHERE username = :value;';
+			$request .= 'WHERE ' . $key . $match;
 		} else if ($key === 'email') {
-			$request .= 'WHERE email = :value;';
+			$request .= 'WHERE ' . $key . $match;
 		} else if ($key === 'status') {
-			$request .= 'WHERE status = :value';
+			$request .= 'WHERE ' . $key . $match;
 		} else if (!empty($key) && !empty($value)) {
 			throw new Exception('Wrong search key');
 		}
@@ -817,6 +823,7 @@ class User {
 											<option value="status">status</option>
 										</select>
 									</td>
+									<td><input type="checkbox" name="exact" value="exact"> exact match</td>
 								</tr>
 							</tbody>
 						</table>
@@ -942,7 +949,13 @@ class User {
 				case 'listMembers' :
 					$key = (isset($_POST['select'])) ? Utils::post('select') : "";
 					$value = (isset($_POST['search'])) ? Utils::post('search') : "";
-					$userArray = self::getUsersFromKey($key, $value);
+					$exact = isset($_POST['exact']);
+					try {
+						$userArray = self::getUsersFromKey($key, $value, $exact);
+					} catch (Exception $e) {
+						Error::exception($e);
+						Utils::goBack();
+					}
 					if (count($userArray) < 1) {
 						self::getSearchFailed();
 						break;

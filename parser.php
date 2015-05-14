@@ -235,7 +235,7 @@ class Parser {
 				if (Wiki::findWord($string)) {
 					$in = str_replace($oldstring, '<a href="index.php?page=wiki&keyword='.$string.'">'.$string.'</a>', $in);
 				} else {
-					$in = str_replace($oldstring, '<a style="color: #FF5252;" href="index.php?page=wiki&keyword='.$string.'">'.$string.'</a>', $in);
+					$in = str_replace($oldstring, '<a style="color: #FF5252;" href="index.php?page=wiki&keyword='.$string.'&action=new">'.$string.'</a>', $in);
 				}
 			}
 		}

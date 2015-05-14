@@ -5,8 +5,17 @@ include_once 'user.php';
 
 class Wiki {
 
-	public static function canEditWiki($user, $id) {
-		return true;
+	public static function canEditWiki($id) {
+		return (Utils::isLoggedIn() && SessionUser::canWiki() && (self::isAuthor($id) ));//||	);
+	}
+
+	public static function isAuthor($id) {
+		$db = new db;
+		$db->request('SELECT 1 FROM wiki WHERE msgId = :id AND authorId = :uid');
+		$db->bind(':id', $id);
+		$db->bind(':uid', SessionUser::getUserId());
+		$result = $db->getAssoc();
+		return (!empty($result));
 	}
 
 	public static function updateWiki($id, $content) {
@@ -28,7 +37,7 @@ class Wiki {
 	/* function serving everyone, simply list wikis available to everyone */
 	public static function getAllWikis() {
 		$db = new db;
-		$db->request('SELECT msgId, msgSubject, msgContent, msgDateCrea FROM wiki;');
+		$db->request('SELECT authorId, msgId, msgSubject, msgContent, msgDateCrea FROM wiki;');
 		$results = $db->getAllAssoc();
 		if (empty($results)) {
 			print '<div id="register">No wikis started yet.</div>';
@@ -57,7 +66,10 @@ class Wiki {
 													if (empty($content['authorId'])) {
 														print 'anonymous author';
 													} else {
-														print '<a href="index.php?page=profile&uid=' . $value['authorId'] . '">author</a>';
+														$db->request('SELECT username FROM users WHERE id = :id;');
+														$db->bind(':id', $content['authorId']);
+														$uname = $db->getAssoc();
+														print '<a href="index.php?page=profile&uid=' . $content['authorId'] . '">'.$uname['username'].'</a>';
 													}
 												'</td>
 											</tr>';
@@ -105,14 +117,13 @@ class Wiki {
 	}
 
 	public static function editWiki($id, $content) {
-		if (self::canEditWiki(SessionUser::getStatus(), $id)) {
+		if (self::canEditWiki($id)) {
 			if (Utils::isGet('action')) {
 				if (Utils::get('action') === 'edit') {
 					if (Utils::isPost('content')) {
 						if (Utils::post('id') === $id) {
 							try {
 								self::updateWiki(Utils::post('id'), Utils::post('content'));
-								print '<tr><td>Wiki entry updated successfully, reloading wiki.</td></tr>';
 							} catch (Exception $e) {
 								Error::exception($e);
 							}
@@ -126,7 +137,7 @@ class Wiki {
 					<tbody>
 						<input type="hidden" name="id" value="' . $id . '">
 						<tr>
-							<td id="regtitle">Wiki edit</td>
+							<td id="regtitle">Page edit</td>
 						</tr>
 						<tr id="formcontent">
 							<td>
@@ -147,11 +158,6 @@ class Wiki {
 					<input id="submit_button" type="submit" value="submit" />
 				</div>
 			</form>';
-		} else {
-			print '
-				<tr>
-					<td><a href="index.php?page=wiki&wiki=' . $id . '&action=edit">Edit wiki</a></td>
-				</tr>';
 		}
 	}
 }

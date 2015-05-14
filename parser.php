@@ -4,11 +4,6 @@ include_once 'wiki.php';
 
 class Parser {
 	const tags = [
-		'comment' => [
-			'code' => '/\[\s*\!{1}\s*\|\s*(.*?)\s*\]/x',
-			'html' => '<!-- $1 -->',
-			'cont' => false,
-		],
 		'div' => [
 			'code' => '/\[\s*d{1}\s*\|\s*(.*?)\s*\]/',
 			'html' => '<div>$1</div>',
@@ -240,6 +235,14 @@ class Parser {
 			}
 		}
 
+		// then do comments, we don't want to recursively match stuff from comments
+		$count = preg_match_all('/\[\s*\!{1}\s*\|\s*(.*?)\s*\]/', $in, $matches);
+		if ($count > 0) {
+			foreach ($matches[0] as $string) {
+				$in = preg_replace('/\[\s*\!{1}\s*\|\s*(.*?)\s*\]/', '<!-- $1 -->', $in);
+			}
+		}
+		
 		// other tags
 		$bcount = self::getBrackets($in, $out);
 		for ($x = 0; $x < $bcount; $x++) {
@@ -317,8 +320,15 @@ class Parser {
 			}
 		}
 
-		// special chars
-		$in = preg_replace('/\\\\/', '',  $in);
+		// replace non escaped ^ with space.
+		$in = preg_replace("/(?<!\\\)[\^]/", " ", $in);
+
+		// remove stray [, ]
+		$in = preg_replace("/(?<!\\\)[\[\]]/", "", $in);
+
+		// remove simple backslashes
+		$in = stripslashes($in);
+		
 		// sometimes I get two <li> for some reason... ugly fix.
 		$in = preg_replace('/(<li>){2,3}/', '<li>', $in);
 		return $in;
@@ -330,4 +340,5 @@ class Parser {
 //$deltest = '[p|Et encore du [b|gras [u|souligné]][br]et du[#F00|rouge]]';
 //print Parser::get($deltest);
 
+print Parser::get(file_get_contents('testmarkup'));
 ?>

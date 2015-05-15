@@ -230,7 +230,7 @@ class Parser {
 				if (Wiki::findWord($string)) {
 					$in = str_replace($oldstring, '<a href="index.php?page=wiki&keyword='.$string.'">'.$string.'</a>', $in);
 				} else {
-					$in = str_replace($oldstring, '<a style="color: #FF5252;" href="index.php?page=wiki&keyword='.$string.'&action=new">'.$string.'</a>', $in);
+					$in = str_replace($oldstring, '<a id="wordnotfound" href="index.php?page=wiki&keyword='.$string.'&action=new">'.$string.'</a>', $in);
 				}
 			}
 		}
@@ -242,7 +242,7 @@ class Parser {
 				$in = preg_replace('/\[\s*\!{1}\s*\|\s*(.*?)\s*\]/', '<!-- $1 -->', $in);
 			}
 		}
-		
+
 		// other tags
 		$bcount = self::getBrackets($in, $out);
 		for ($x = 0; $x < $bcount; $x++) {
@@ -328,9 +328,6 @@ class Parser {
 
 		// remove simple backslashes
 		$in = stripslashes($in);
-		
-		// sometimes I get two <li> for some reason... ugly fix.
-		$in = preg_replace('/(<li>){2,3}/', '<li>', $in);
 		return $in;
 	}
 }
@@ -339,6 +336,4 @@ class Parser {
 //$tabletest = '[t|2|[th|t1|t2|t3]|[ti|one|two|three]|[ti|four|five|six]|[ti|seven|eight|nine]]';
 //$deltest = '[p|Et encore du [b|gras [u|souligné]][br]et du[#F00|rouge]]';
 //print Parser::get($deltest);
-
-print Parser::get(file_get_contents('testmarkup'));
 ?>

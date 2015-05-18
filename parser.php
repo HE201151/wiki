@@ -130,19 +130,22 @@ class Parser {
 		$string = "";
 		foreach ($elements as $li) {
 			// embedded ul's
-			if (preg_match('/\s*<ul>\s*(.*?)\s*<\/ul>\s*/', $li)) {
-				$li = preg_replace('/\s*<ul>\s*(.*?)\s*<\/ul>\s*/', '<ul><li>$1</li></ul>', $li);
+			if (preg_match('/\s*<ul>\s*(.*?)\s*<\/ul>\s*/', $li, $ultags) > 0) {
+				if (!preg_match('/\s*<li>\s*/', $ultags[0])) {
+					$li = preg_replace('/\s*<ul>\s*(.*?)\s*<\/ul>\s*/', '<ul>$1</ul>', $li);
+					// ul tags
+					$count = preg_match_all('/<ul>(.*)<\/ul>/', $li, $matches);
+					if ($count > 0) {
+						$li = self::dolist($li, $matches[1][0], 'ul');
+					}
+				}
 				$string .= $li;
 			// embedded ol's
 			} else if (preg_match('/\s*<ol>\s*(.*?)\s*<\/ol>\s*/', $li)) {
 				$li = preg_replace('/\s*<ol>\s*(.*?)\s*<\/ol>\s*/', '<ol><li>$1</li></ol>', $li);
 				$string .= $li;
 			} else {
-				if (preg_match('/<li>{2}/', $li)) {
-					$string .= $i;
-				} else {
-					$string .= '<li>' . $li . '</li>';
-				}
+				$string .= '<li>' . $li . '</li>';
 			}
 		}
 		return $string;
@@ -261,10 +264,6 @@ class Parser {
 		if ($count > 0) {
 			foreach ($matches[1] as $string) {
 				$in = self::dolist($in, $string, 'ul');
-				$innercount = preg_match('/<ul>(.*?)<\/ul>/', $string, $innermatches);
-				if ($innercount > 0) {
-					$in = self::dolist($in, '<ul>' . $innermatches[1], 'ul');
-				}
 			}
 		}
 
@@ -285,11 +284,6 @@ class Parser {
 		if ($count > 0) {
 			foreach ($matches[1] as $string) {
 				$in = self::dolist($in, $string, 'ol');
-				// $innercount = preg_match('/<ol(.*?)>(.*?)<\/ol>/', $string, $innermatches);
-				// var_dump($innermatches);
-				// if ($innercount > 0) {
-				// 	$in = self::dolist($in, '<ol>' . $innermatches[1], 'ol');
-				// }
 			}
 		}
 
@@ -335,5 +329,9 @@ class Parser {
 // invented table markup :
 //$tabletest = '[t|2|[th|t1|t2|t3]|[ti|one|two|three]|[ti|four|five|six]|[ti|seven|eight|nine]]';
 //$deltest = '[p|Et encore du [b|gras [u|souligné]][br]et du[#F00|rouge]]';
-//print Parser::get($deltest);
+
+// $uloltest = '[div|	http://www.webweaver.nu/clipart/img/web/backgrounds/halloween/ghosts.gif |	
+// [#ff0|[ol_|a|0|[ol|a1|[#fff|b2]]|[ul|1|2|3]|z]]
+// ]';
+// print Parser::get($uloltest);
 ?>

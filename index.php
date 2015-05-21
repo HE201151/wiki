@@ -56,12 +56,16 @@
 					include_once 'register.php';
 					Register::resetPassword();
 
-				} else if (Utils::page() === "wiki") {
+				} else if (Utils::page() === "topics") {
 					include_once 'wiki.php';
-					if (isset($_GET['wiki'])) {
-						Wiki::getWiki(Utils::get('wiki'));
+					if (isset($_GET['id'])) {
+						if (isset($_GET['p'])) {
+							Wiki::getPage(Utils::get('id'));
+						} else {
+							Wiki::getTopicPages(Utils::get('id'));
+						}
 					} else {
-						Wiki::getAllWikis();
+						Wiki::getTopics();
 					}
 
 				} else {
@@ -71,7 +75,7 @@
 					} else {
 						echo "You are not logged in.";
 					}
-					Wiki::getAllWikis();
+					Wiki::getTopics();
 				}
 	 			?>
 			</article>

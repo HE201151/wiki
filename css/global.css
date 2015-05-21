@@ -340,3 +340,7 @@ span.resetpw {
 textarea#wikicontent {
     width: 100%;
 }
+
+#wordnotfound {
+    color: #FF5252!important;
+}

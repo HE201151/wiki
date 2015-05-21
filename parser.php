@@ -141,8 +141,15 @@ class Parser {
 				}
 				$string .= $li;
 			// embedded ol's
-			} else if (preg_match('/\s*<ol>\s*(.*?)\s*<\/ol>\s*/', $li)) {
-				$li = preg_replace('/\s*<ol>\s*(.*?)\s*<\/ol>\s*/', '<ol><li>$1</li></ol>', $li);
+			} else if (preg_match('/\s*<ol>\s*(.*?)\s*<\/ol>\s*/', $li, $oltags) > 0) {
+				var_dump($oltags);
+				if (!preg_match('/\s*<li>\s*/', $oltags[0])) {
+					$li = preg_replace('/\s*<ol>\s*(.*?)\s*<\/ol>\s*/', '<ol>$1</ol>', $li);
+					$count = preg_match_all('/<ol>(.*)<\/ol>/', $li, $matches);
+					if  ($count > 0) {
+						$li = self::dolist($li, $matches[1][0], 'ol');
+					}
+				}
 				$string .= $li;
 			} else {
 				$string .= '<li>' . $li . '</li>';
@@ -330,8 +337,6 @@ class Parser {
 //$tabletest = '[t|2|[th|t1|t2|t3]|[ti|one|two|three]|[ti|four|five|six]|[ti|seven|eight|nine]]';
 //$deltest = '[p|Et encore du [b|gras [u|souligné]][br]et du[#F00|rouge]]';
 
-// $uloltest = '[div|	http://www.webweaver.nu/clipart/img/web/backgrounds/halloween/ghosts.gif |	
-// [#ff0|[ol_|a|0|[ol|a1|[#fff|b2]]|[ul|1|2|3]|z]]
-// ]';
-// print Parser::get($uloltest);
+// $uloltest = '[#ff0|[ol_|a|0|[ol|a1|[#fff|b2]]|[ul|1|2|3]|[ol|4|5|6]|z]]]';
+//  print Parser::get($uloltest);
 ?>

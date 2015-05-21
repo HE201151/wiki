@@ -15,6 +15,8 @@ abstract class UserStatus {
 	const Registered = "registered";
 	const Deregistered = "deregistered";
 
+	const statusHierarchy = [ self::Administrator, self::Moderator, self::Member, self::Frozen, self::Banned, self::Deregistered ];
+
 	const canLogin = [ self::Administrator, self::Moderator, self::Member, 
 						self::Reactivation, self::Frozen ];
 

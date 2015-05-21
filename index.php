@@ -58,12 +58,14 @@
 
 				} else if (Utils::page() === "topics") {
 					include_once 'wiki.php';
-					if (isset($_GET['id'])) {
-						if (isset($_GET['p'])) {
+					if (Utils::isGet('id')) {
+						if (Utils::isGet('p')) {
 							Wiki::getPage(Utils::get('id'));
 						} else {
 							Wiki::getTopicPages(Utils::get('id'));
 						}
+					} else if (Utils::isGet('action')) {
+						Wiki::actions();
 					} else {
 						Wiki::getTopics();
 					}

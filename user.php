@@ -847,7 +847,7 @@ class User {
 
 	public static function getMessageList() {
 		$request = 'SELECT id, subject, email, user_id, parent_id, date, status FROM messages ';
-		if (isset($_GET['sort'])) {
+		if (Utils::isGet('sort')) {
 			switch (Utils::get('sort')) {
 				case 'all' :
 					break;
@@ -933,7 +933,7 @@ class User {
         </tbody>
         </table>';
 
-        if (isset($_GET['sort'])) {
+        if (Utils::isGet('sort')) {
         	print '<script>document.getElementById("sortsearch").value = "' . Utils::get('sort') .'";</script>';
         }
 
@@ -949,9 +949,9 @@ class User {
 		if (Utils::isGet('action')) {
 			switch (Utils::get('action')) {
 				case 'listMembers' :
-					$key = (isset($_POST['select'])) ? Utils::post('select') : "";
-					$value = (isset($_POST['search'])) ? Utils::post('search') : "";
-					$exact = isset($_POST['exact']);
+					$key = (Utils::isGet('select')) ? Utils::post('select') : "";
+					$value = (Utils::isGet('search')) ? Utils::post('search') : "";
+					$exact = Utils::isGet('exact');
 					try {
 						$userArray = self::getUsersFromKey($key, $value, $exact);
 					} catch (Exception $e) {
@@ -1110,7 +1110,7 @@ class User {
 			return;
 		}
 
-		$get = !isset($_GET['uid']) ? "" : Utils::get('uid');
+		$get = !Utils::isGet('uid') ? "" : Utils::get('uid');
 		if (Utils::isGet('action')) {
 			switch (Utils::get('action')) {
 				case "changeUsername" :

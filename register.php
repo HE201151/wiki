@@ -562,7 +562,7 @@ class Register {
 	}
 
 	public static function resetPassword() {
-		if (isset($_POST['uid']) && isset($_POST['answer'])) {
+		if (Utils::isPost('uid') && Utils::isPost('answer')) {
 			try {
 				User::matchSecretQuestion(Utils::post('uid'), Hash::get(Utils::post('answer')));
 			} catch (Exception $e) {
@@ -574,7 +574,7 @@ class Register {
 
 			return;
 		}
-		if (isset($_POST['uid']) && isset($_POST['password'])) {
+		if (Utils::isPost('uid') && Utils::isPost('password')) {
 			try {
 				$db = new db;
 				$db->request('SELECT id, status FROM users WHERE id = :uid;');
@@ -608,8 +608,8 @@ class Register {
 			header("Location: index.php");
 			return;
 		}
-		if (!isset($_POST['email'])) {
-			if (isset($_GET['activationCode'])) {
+		if (!Utils::isPost('email')) {
+			if (Utils::isGet('activationCode')) {
 				$db = new db;
 				$db->request('SELECT users_id, activationCode FROM activations WHERE activationCode = :code');
 				$db->bind(':code', Utils::get('activationCode'));
@@ -673,7 +673,7 @@ class Register {
 	}
 
 	public static function activate() {
-		if (isset($_POST['question']) && isset($_POST['answer']) && isset($_POST['uid'])) {
+		if (Utils::isPost('question') && Utils::isPost('answer') && Utils::isPost('uid')) {
 			User::registerQuestions(Utils::post('uid'), Utils::post('question'), Utils::post('answer'));
 		}
 
@@ -688,7 +688,7 @@ class Register {
 			if (!User::isRegistered($status)) {
 				User::toggleReactivation($result['users_id'], $status);
 			} else {
-				if (isset($_POST['question'])) {
+				if (Utils::isPost('question')) {
 					User::changeStatus($uid, [ UserStatus::Member ]);
 				}
 			}
@@ -698,7 +698,7 @@ class Register {
 			}
 
 			// if first activation
-			if (User::isRegistered($status) && !isset($_POST['question'])) {
+			if (User::isRegistered($status) && !Utils::isPost('question')) {
 				self::getSecretQuestionForm($uid, $result['activationCode']);
 				return;
 			} else {

@@ -38,6 +38,15 @@ class Wiki {
 		return (!empty($result));
 	}
 
+	public static function actions() {
+		if (Utils::get('action') === 'new') {
+			self::createTopic();
+		}
+	}
+	public static function createTopic() {
+		// XXX 
+	}
+
 	/* function serving everyone, simply list wikis available to everyone */
 	public static function getTopics() {
 		$db = new db;

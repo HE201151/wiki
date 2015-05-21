@@ -15,9 +15,9 @@ class Mail {
 
 	public static function getContactForm() {
 		// XXX make conversations user specific
-		if (isset($_GET['mid'])) {
+		if (Utils::isGet('mid')) {
 			if (SessionUser::isAdmin()) {
-				if (isset($_GET['mid'])) {
+				if (Utils::isGet('mid')) {
 					$db = new db;
 					$db->request('SELECT id, user_id, subject, message, date FROM messages WHERE id = :id OR parent_id = :id ORDER BY date ASC');
 					$db->bind(':id', Utils::get('mid'));
@@ -66,7 +66,7 @@ class Mail {
 						</tr>
 			        </tbody>
 			        </table>';
-			        if (isset($_GET['action'])) {
+			        if (Utils::isGet('action')) {
 						if (Utils::get('action') === "reply") {
 							print '
 							<form id="contact_form" action="post.php?action=message&mid=' . Utils::get('mid') . '" method="POST">

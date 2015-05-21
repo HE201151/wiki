@@ -93,7 +93,7 @@ if (!empty($_POST)) {
 
 		case 'message' : 
 			try {
-				if (isset($_GET['mid'])) {
+				if (Utils::isGet('mid')) {
 					Mail::reply(Utils::get('mid'));
 					header("Location: index.php?page=contact&mid=" . Utils::get('mid'));
 				} else {

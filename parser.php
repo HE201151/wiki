@@ -238,14 +238,14 @@ class Parser {
 				$oldstring = $string;
 				$string = preg_replace('/(\[|\])/', '', $string);
 				if (Wiki::findWord($string)) {
-					$in = str_replace($oldstring, '<a href="index.php?page=wiki&keyword='.$string.'">'.$string.'</a>', $in);
+					$in = str_replace($oldstring, '<a href="index.php?page=topics&keyword='.$string.'">'.$string.'</a>', $in);
 				} else {
-					$in = str_replace($oldstring, '<a id="wordnotfound" href="index.php?page=wiki&keyword='.$string.'&action=new">'.$string.'</a>', $in);
+					$in = str_replace($oldstring, '<a id="wordnotfound" href="index.php?page=topics&keyword='.$string.'&action=new">'.$string.'</a>', $in);
 				}
 			}
 		}
 
-		// then do comments, we don't want to recursively match stuff from comments
+		// comments
 		$count = preg_match_all('/\[\s*\!{1}\s*\|\s*(.*?)\s*\]/', $in, $matches);
 		if ($count > 0) {
 			foreach ($matches[0] as $string) {

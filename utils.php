@@ -71,7 +71,6 @@ class Utils {
       	$curHeight = $imageInfo[1];
       	$imageType = $imageInfo[2];
 
-      	// XXX set accepted extensions in config ?
       	/* load image */
       	if ($imageType == IMAGETYPE_JPEG) {
         	$image = imagecreatefromjpeg($filename);

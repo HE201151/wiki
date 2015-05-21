@@ -7,7 +7,6 @@ class Jason {
     const config_file = "config.ini";
     /* json data variable */
     private $json;
-    /* fields */
 
 
     /* json error messages */

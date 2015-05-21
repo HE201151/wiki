@@ -15,7 +15,7 @@ abstract class UserStatus {
 	const Registered = "registered";
 	const Deregistered = "deregistered";
 
-	const statusHierarchy = [ self::Administrator, self::Moderator, self::Member, self::Frozen, self::Banned, self::Deregistered ];
+	const statusHierarchy = [ "everyone", self::Member, self::Moderator, self::Administrator ];
 
 	const canLogin = [ self::Administrator, self::Moderator, self::Member, 
 						self::Reactivation, self::Frozen ];
@@ -70,6 +70,15 @@ class SessionUser {
 	public static function getStatusDesc() {
 		return Utils::arrayToString(self::getStatus());
 	}
+
+	public static function getLowerHierarchyGroups() {
+		$groups = array();
+		for ($i = 0; array_push($groups, UserStatus::statusHierarchy[$i]); $i++) {
+			 if (UserStatus::statusHierarchy[$i] === self::getStatus()[0])
+			 	break;
+		}
+		return $groups;
+	}
 }
 
 class User {
@@ -86,7 +95,6 @@ class User {
 	 * Get user information from uid
 	 *
 	 */
-	// XXX uid = 0 does not work
 	public function __construct($uid) {
 		$this->db = new db;
 		$this->db->request('SELECT avatar, username, status, activated, lastconnect, email FROM users WHERE id = :id');

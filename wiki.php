@@ -22,6 +22,16 @@ class Wiki {
 		return true;
 	}
 
+	public static function insertTopic($title, $descr, $visibility) {
+		$db = new db;
+		$db->request('INSERT INTO topic (tTitle, tDesc, authorId, tCreation, tLastModif, visibilityAuthorChoice) VALUES (:title, :descr, :uid, now(), now(), :v);');
+		$db->bind(':title', $title);
+		$db->bind(':descr', $descr);
+		$db->bind(':uid', SessionUser::getUserId());
+		$db->bind(':v', $visibility);
+		$db->doquery();
+	}
+
 	public static function updatePage($id, $content) {
 		$db = new db;
 		$db->request('UPDATE page SET content = :content, pLastModif = now() WHERE pId = :id;');
@@ -44,7 +54,90 @@ class Wiki {
 		}
 	}
 	public static function createTopic() {
-		// XXX 
+		if (!Utils::isLoggedIn()) {
+			print '<div id="register">Only logged in users can create new topics.</div>';
+			return;
+		}
+		if (Utils::isPost('topic')) {
+			// create topic and assign visibility
+			// auto assign to modo
+			// create blank page
+			// manage topics (admin,author,choice)-> visibility
+			try {
+				self::insertTopic(Utils::post('topic'), Utils::post('descr'), Utils::post('select'));
+				var_dump(Utils::post('topic'), Utils::post('descr'), Utils::post('select'));
+			} catch (Exception $e) {
+				Error::exception($e);
+			}
+		} else {
+			print '<form id="register" action="index.php?page=topics&action=new" method="post">
+			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
+				<tbody>
+					<tr>
+						<td id="regtitle">Create Topic</td>
+					</tr>
+					<tr id="formcontent">
+						<td>
+							<table cellpadding="6" cellspacing="0" width=100%>
+								<tbody>
+									<tr>
+										<td colspan="2">Topic Name</td>
+									</tr>
+									<tr>
+										<td colspan="2"><input type="text" name="topic" id="topic" maxlength="50" style="width: 100%" value="" required/></td>
+									</tr>
+									<tr>
+										<td>Topic Description</td>
+									</tr>
+									<tr>
+										<td colspan="2"><input type="text" name="descr" id="descr" maxlength="50" style="width: 100%" value=""/></td>
+									<tr>
+										<td>Topic Visibility</td>
+									</tr>
+									<tr>
+										<td>
+											<select id="select" name="select">';
+												// get sure <= user hierarchically.
+												// <option value="username">username</option>
+												// <option value="email">email</option>
+												// <option value="status">status</option>
+												$groups = SessionUser::getLowerHierarchyGroups();
+												foreach ($groups as $group) {
+													print '<option value="' . $group . '">' . $group . '</option>';
+												}
+											print '</select>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<br />
+			<div id="submit" align="center">
+				<input type="submit" name="Submit" value="create" />
+			</div>
+			</form>';
+			self::validateTopicCreation();
+		}
+	}
+
+	public static function validateTopicCreation() {
+		print '<script>
+		$(function() {
+			$("#register").validate({
+				rules: {
+					topic: "required",
+					select: "required"
+				},
+				messages: {
+					topic: "Please enter a topic name",
+					select: "Please choose group visibility"
+				}
+			});
+		});
+		</script>';
 	}
 
 	/* function serving everyone, simply list wikis available to everyone */
@@ -69,23 +162,25 @@ class Wiki {
 							<table cellpadding="6" cellspacing="0" width=100%>
 								<tbody>
 									<tr>
-										<td class="tcat">Subject</td>
+										<td class="tcat">Topic</td>
+										<td class="tcat">Description</td>
+										<td class="tcat">Creation Date</td>
 										<td class="tcat">Author</td>
 									</tr>';
-									foreach ($results as $thread => $content) {
+									foreach ($results as $topic => $content) {
 										print '
 											<tr>
-												<td class="trow">
-													<a href=index.php?page=topics&tId=' . $content['tId'] . '>' . $content['tTitle'] . '</a>
-												</td>
+												<td class="trow"><a href=index.php?page=topics&id=' . $content['tId'] . '>' . $content['tTitle'] . '</a></td>
+												<td class="trow">' . (empty($content['tDesc']) ? "empty" : $content['tDesc']) . '</td>
+												<td class="trow">' . $content['tCreation'] . '</td>
 												<td class="trow">';
-													if (empty($content['authorId'])) {
+													if (!is_numeric($content['authorId'])) {
 														print 'anonymous author';
 													} else {
 														$db->request('SELECT username FROM users WHERE id = :id;');
 														$db->bind(':id', $content['authorId']);
 														$uname = $db->getAssoc();
-														print '<a href="index.php?page=profile&uid=' . $content['authorId'] . '">'.$uname['username'].'</a>';
+														print '<a href="index.php?page=profile&uid=' . $content['authorId'] . '">' . $uname['username'] . '</a>';
 													}
 												'</td>
 											</tr>';
@@ -107,7 +202,8 @@ class Wiki {
 		$db->bind(':tId', $tId);
 		$results = $db->getAllAssoc();
 		if (empty($results)) {
-			print '<div id="register">This topic does not exist. <a href="index.php?page=topics&action=new">Write on a new topic.</a></div>';
+			// if is author.
+			print '<div id="register">No pages exist for this topic. <a href="index.php?page=topics&action=new">Write a new page for this topic.</a></div>';
 		} else {
 			print '<table id="register" border="0" cellspacing="0" cellpadding="6" class="tborder">
 			<tbody>

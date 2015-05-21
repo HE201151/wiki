@@ -5,21 +5,46 @@ include_once 'user.php';
 
 class Wiki {
 
-	public static function canEditTopic($id) {
-		return (Utils::isLoggedIn() && SessionUser::canWiki() && (self::isAuthor($id) || self::canModerate($id)));
+	public static function canEditPage($tid) {
+		return (Utils::isLoggedIn() && SessionUser::canWiki() && self::isAuthor($tid));
 	}
 
-	public static function isAuthor($id) {
+	public static function isAuthor($tid) {
 		$db = new db;
-		$db->request('SELECT 1 FROM topic WHERE tId = :id AND authorId = :uid');
-		$db->bind(':id', $id);
-		$db->bind(':uid', SessionUser::getUserId());
+		$db->request('SELECT 1 FROM topic WHERE tId = :tid AND authorId = :uid');
+		$db->bind(':tid', $tid);
+		$db->bind(':uid', SessionUser::getUserId() == "admin" ? 0 : SessionUser::getUserId());
 		$result = $db->getAssoc();
-		return (!empty($result));
+		return ($result);
+	}
+
+	public static function canSeeTopic($tid) {
+		$db = new db;
+		$db->request('SELECT visibilityAuthorChoice, visibilityModChoice, visibilityAdminChoice FROM topic WHERE tId = :tid;');
+		$db->bind(':tid', $tid);
+		$results = $db->getAssoc();
+		if (empty($results['visibilityAdminChoice'])) {
+			if (empty($results['visibilityModChoice'])) {
+				$visibility = SessionUser::hasPermission($results['visibilityAuthorChoice']);
+			} else {
+				$visibility = SessionUser::hasPermission($results['visibilityModChoice']);
+			}
+		} else {
+			$visibility = SessionUser::hasPermission($results['visibilityAdminChoice']);
+		}
+		return $visibility;
+	}
+
+	public static function canSeePage($pid) {
+		$db = new db;
+		$db->request('SELECT tId FROM page WHERE pId = :pid;');
+		$db->bind(':pid', $pid);
+		$result = $db->getAssoc();
+		return self::canSeeTopic($result['tId']);
 	}
 
 	public static function canModerate($id) {
-		return true;
+		return false;
 	}
 
 	public static function insertTopic($title, $descr, $visibility) {
@@ -30,47 +55,85 @@ class Wiki {
 		$db->bind(':uid', SessionUser::getUserId());
 		$db->bind(':v', $visibility);
 		$db->doquery();
+		$db->request('SELECT tId FROM topic GROUP BY tId DESC');
+		$tid = $db->getAssoc();
+		return $tid['tId'];
 	}
 
-	public static function updatePage($id, $content) {
+	public static function insertPage($tid) {
 		$db = new db;
-		$db->request('UPDATE page SET content = :content, pLastModif = now() WHERE pId = :id;');
+		$db->request('INSERT INTO page (tId, content, pCreation, pLastModif, pTitle, pDesc) VALUES (:tid, "empty", now(), now(), :ptitle, "empty");');
+		$db->bind(':tid', $tid);
+		$db->bind(':ptitle', Utils::isGet('keyword') ? Utils::get('keyword') : "empty");
+		$db->doquery();
+		$db->request('SELECT pId FROM page GROUP BY pId DESC');
+		$tid = $db->getAssoc();
+		return $tid['pId'];
+	}
+
+	public static function updatePage($id, $title, $descr, $content) {
+		$db = new db;
+		$db->request('UPDATE page SET pTitle = :title, content = :content, pDesc = :descr, pLastModif = now() WHERE pId = :id;');
+		$db->bind(":title", $title);
 		$db->bind(':id', $id);
 		$db->bind(':content', $content);
+		$db->bind(':descr', $descr);
 		$db->doquery();
 	}
 
 	public static function findWord($word) {
 		$db = new db;
-		$db->request("SELECT 1 FROM page WHERE keyword = :word");
+		$db->request("SELECT pId FROM page WHERE pTitle = :word");
 		$db->bind(':word', $word);
 		$result = $db->getAssoc();
-		return (!empty($result));
+		return ($result['pId']);
 	}
 
 	public static function actions() {
-		if (Utils::get('action') === 'new') {
+		if (Utils::get('action') === 'newtopic') {
 			self::createTopic();
+		} else if (Utils::get('action') === 'newpage') {
+			if (Utils::isGet('tid')) {
+				if (self::canEditPage(Utils::get('tid'))) {
+					$pid = self::insertPage(Utils::get('tid'));
+					$db = new db;
+					$db->request('SELECT pTitle, pDesc, content FROM page WHERE pId = :pid;');
+					$db->bind(':pid', $pid);
+					$result = $db->getAssoc();
+					self::editPage($pid, $result['pTitle'], $result['pDesc'], $result['content']);
+				} else {
+					print '<div id="register">You are not allowed to create pages for this topic.</div>';
+				}
+			}
+		} else if (Utils::get('action') === 'editpage') {
+			if (Utils::isPost('content')) {
+				try {
+					self::updatePage(Utils::post('pid'), Utils::post('title'), Utils::post('descr'), Utils::post('content'));
+				} catch (Exception $e) {
+					Error::exception($e);
+				}
+			}
+			self::getPage(Utils::get('pid'));
 		}
 	}
+
 	public static function createTopic() {
 		if (!Utils::isLoggedIn()) {
 			print '<div id="register">Only logged in users can create new topics.</div>';
 			return;
 		}
 		if (Utils::isPost('topic')) {
-			// create topic and assign visibility
-			// auto assign to modo
-			// create blank page
-			// manage topics (admin,author,choice)-> visibility
+			// XXX manage topics (admin,author,choice)-> visibility -> modoid
 			try {
-				self::insertTopic(Utils::post('topic'), Utils::post('descr'), Utils::post('select'));
-				var_dump(Utils::post('topic'), Utils::post('descr'), Utils::post('select'));
+				$tid = self::insertTopic(Utils::post('topic'), Utils::post('descr'), Utils::post('select'));
+				$pid = self::insertPage($tid);
+				self::editPage($pid);
 			} catch (Exception $e) {
-				Error::exception($e);
+				Error::set("This topic name already exist, please choose another one.");
+				Utils::goBack();
 			}
 		} else {
-			print '<form id="register" action="index.php?page=topics&action=new" method="post">
+			print '<form id="register" action="index.php?page=topics&action=newtopic" method="post">
 			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
 				<tbody>
 					<tr>
@@ -97,10 +160,6 @@ class Wiki {
 									<tr>
 										<td>
 											<select id="select" name="select">';
-												// get sure <= user hierarchically.
-												// <option value="username">username</option>
-												// <option value="email">email</option>
-												// <option value="status">status</option>
 												$groups = SessionUser::getLowerHierarchyGroups();
 												foreach ($groups as $group) {
 													print '<option value="' . $group . '">' . $group . '</option>';
@@ -146,14 +205,14 @@ class Wiki {
 		$db->request('SELECT tId, authorId, tTitle, tDesc, tCreation FROM topic;');
 		$results = $db->getAllAssoc();
 		if (empty($results)) {
-			print '<div id="register">No topics started yet. <a href="index.php?page=topics&action=new">Write on a new topic.</a></div>';
+			print '<div id="register">No topics started yet. <a href="index.php?page=topics&action=newtopic">Write on a new topic.</a></div>';
 		} else {
 			print '<table id="register" border="0" cellspacing="0" cellpadding="6" class="tborder">
 			<tbody>
 				<tr>
 					<td id="regtitle">
 						<span style="float: left;">Topics</span>
-						<span style="float: right;"><a href="index.php?page=topics&action=new">Write on a new topic.</a></span>
+						<span style="float: right;"><a href="index.php?page=topics&action=newtopic">Write on a new topic.</a></span>
 					</td>
 				</tr>
 				<tr id="formcontent">
@@ -168,9 +227,10 @@ class Wiki {
 										<td class="tcat">Author</td>
 									</tr>';
 									foreach ($results as $topic => $content) {
+										if (self::canSeeTopic($content['tId'])) {
 										print '
 											<tr>
-												<td class="trow"><a href=index.php?page=topics&id=' . $content['tId'] . '>' . $content['tTitle'] . '</a></td>
+												<td class="trow"><a href=index.php?page=topics&tid=' . $content['tId'] . '>' . $content['tTitle'] . '</a></td>
 												<td class="trow">' . (empty($content['tDesc']) ? "empty" : $content['tDesc']) . '</td>
 												<td class="trow">' . $content['tCreation'] . '</td>
 												<td class="trow">';
@@ -184,6 +244,7 @@ class Wiki {
 													}
 												'</td>
 											</tr>';
+										}
 									}
 									print '
 									</tbody>
@@ -197,117 +258,127 @@ class Wiki {
 	}
 
 	public static function getTopicPages($tId) {
-		$db = new db;
-		$db->request('SELECT pId, pTitle, pDesc, pCreation, pLastModif FROM page WHERE tId = :tId;');
-		$db->bind(':tId', $tId);
-		$results = $db->getAllAssoc();
-		if (empty($results)) {
-			// if is author.
-			print '<div id="register">No pages exist for this topic. <a href="index.php?page=topics&action=new">Write a new page for this topic.</a></div>';
+		if (!self::canSeeTopic($tId)) {
+			print '<div id="register">You have no permission to see this topic.</div>';
+			return;
 		} else {
-			print '<table id="register" border="0" cellspacing="0" cellpadding="6" class="tborder">
-			<tbody>
-				<tr>
-					<td id="regtitle">
-						<span style="float: left;">Pages</span>
-						<span style="float: right;"><a href="index.php?page=topics&action=new">Write a new page for this topic.</a></span>
-					</td>
-				</tr>
-				<tr id="formcontent">
-					<td>
-						<fieldset>
-							<table cellpadding="6" cellspacing="0" width=100%>
-								<tbody>
-									<tr>
-										<td class="tcat">Page</td>
-										<td class="tcat">Creation Date</td>
-										<td class="tcat">Last Modif. Date</td>
-									</tr>';
-									foreach ($results as $thread => $content) {
-										print '
-											<tr>
-												<td class="trow"><a href=index.php?page=topics&id=' . $tId . '&p= ' . $content['pId'] . '>' . $content['tTitle'] . '</a></td>
-												<td class="trow">' . $content['pCreation'] . '</td>
-												<td class="trow">' . $content['pLastModif'] . '</td>
-											</tr>';
-									}
-									print '
-									</tbody>
-							</table>
-						</fieldset>
-					</td>
-				</tr>
-				</tbody>
-			</table>';
-		}
-	}
-
-	public static function getPage($tid) {
-		$db = new db;
-		$db->request('SELECT pId, pTitle, content, pCreation, pLastModif FROM page WHERE tId = :id;');
-		$db->bind(':id', $tid);
-		$result = $db->getAssoc();
-		if (empty($result)) {
-			print '<div id="register">This page does not exist.</div>';
-		} else {
-			print '
-			<table id="register" border="0" cellspacing="0" cellpadding="6" class="tborder">
+			$db = new db;
+			$db->request('SELECT tTitle, pId, pTitle, pDesc, pCreation, pLastModif FROM topic as t, page as p WHERE p.tId = :tId AND t.tId = p.tId');
+			$db->bind(':tId', $tId);
+			$results = $db->getAllAssoc();
+			if (empty($results)) {
+				if (self::canEditPage($tId)) {
+					print '<div id="register">No pages exist for this topic. <a href="index.php?page=topics&tid=' . $tId . '&action=newpage">Write a new page for this topic.</a></div>';
+				} else {
+					print '<div id="register">No pages exist for this topic.</div>';
+				}
+			} else {
+				print '<table id="register" border="0" cellspacing="0" cellpadding="6" class="tborder">
 				<tbody>
 					<tr>
-						<td id="regtitle">' . $result['pTitle'] . '</td>
+						<td id="regtitle">
+							<span style="float: left;">' . $results[0]['tTitle'] . '</span>
+							<span style="float: right;"><a href="index.php?page=topics&tid=' . $tId . '&action=newpage">Write a new page for this topic.</a></span>
+						</td>
 					</tr>
 					<tr id="formcontent">
 						<td>
 							<fieldset>
 								<table cellpadding="6" cellspacing="0" width=100%>
 									<tbody>
-										<tr> '. Parser::get($result['content']) . '</tr>
-									</tbody>
+										<tr>
+											<td class="tcat">Page</td>
+											<td class="tcat">Description</td>
+											<td class="tcat">Creation Date</td>
+											<td class="tcat">Last Modification Date</td>
+										</tr>';
+										foreach ($results as $thread => $content) {
+											print '
+												<tr>
+													<td class="trow"><a href=index.php?page=topics&pid=' . $content['pId'] . '>' . $content['pTitle'] . '</a></td>
+													<td class="trow">' . $content['pDesc'] . '</td>
+													<td class="trow">' . $content['pCreation'] . '</td>
+													<td class="trow">' . $content['pLastModif'] . '</td>
+												</tr>';
+										}
+										print '
+										</tbody>
 								</table>
 							</fieldset>
 						</td>
 					</tr>
-				</tbody>
-			</table>';
-			self::editWiki($id, $result['content']);
+					</tbody>
+				</table>';
+			}
 		}
 	}
 
-	public static function editPage($id, $content) {
-		if (self::canEditTopic($id)) {
-			if (Utils::isGet('action')) {
-				if (Utils::get('action') === 'edit') {
-					if (Utils::isPost('content')) {
-						if (Utils::post('id') === $id) {
-							try {
-								self::updatePage(Utils::post('id'), Utils::post('content'));
-							} catch (Exception $e) {
-								Error::exception($e);
-							}
-						}
-					}
-				}
-			}
-		print '
-			<form id="register" action="index.php?page=topics&tId='.$id.'&action=edit" method="post" onsubmit="setTimeout(function () { window.location.reload(); }, 0)">
-				<table border="0" cellspacing="0" cellpadding="6" class="tborder">
+	public static function getPage($pid) {
+		if (!self::canSeePage($pid)) {
+			print '<div id="register">You have no permission to see this topic.</div>';
+			return;
+		} else {
+			$db = new db;
+			$db->request('SELECT t.tId, pId, pTitle, content, pDesc, pCreation, pLastModif FROM page as p, topic as t WHERE pId = :pid AND t.tId = p.tId;');
+			$db->bind(':pid', $pid);
+			$result = $db->getAssoc();
+			if (empty($result)) {
+				print '<div id="register">This page does not exist.</div>';
+			} else {
+				print '
+				<table id="register" border="0" cellspacing="0" cellpadding="3" class="tborder">
 					<tbody>
-						<input type="hidden" name="id" value="' . $id . '">
 						<tr>
-							<td id="regtitle">Page edit</td>
+							<td id="regtitle">
+								<span style="float:left;">' . $result['pTitle'] . '</span>
+								<span style="float:right;">' . $result['pDesc'] . '</span>
+							</td>
 						</tr>
 						<tr id="formcontent">
 							<td>
 								<fieldset>
 									<table cellpadding="6" cellspacing="0" width=100%>
 										<tbody>
-											<tr>
-												<textarea id="wikicontent" name="content" rows="15">' . $content . '</textarea>
-											</tr>
+											<tr> '. Parser::get($result['content']) . '</tr>
 										</tbody>
 									</table>
 								</fieldset>
 							</td>
+						</tr>
+					</tbody>
+				</table>';
+				if (self::canEditPage($result['tId']))
+					self::editPage($result['pId'], $result['pTitle'], $result['pDesc'], $result['content']);
+			}
+		}
+	}
+
+	public static function editPage($pid, $title, $descr, $content) {
+		print '
+			<form id="register" action="index.php?page=topics&pid='.$pid.'&action=editpage" method="post">
+				<table border="0" cellspacing="0" cellpadding="6" class="tborder">
+					<tbody>
+						<input type="hidden" name="pid" value="' . $pid . '">
+						<tr>
+							<td id="regtitle">Page edit</td>
+						</tr>
+						<tr>
+							<td>Edit Page Title</td>
+						</tr>
+						<tr>
+							<td><input type="text" name="title" id="title" maxlength="50" style="width: 100%" value="' . $title . '" required/>
+						</tr>
+						<tr>
+							<td>Page Description</td>
+						</tr>
+						<tr>
+							<td><input type="text" name="descr" id="descr" maxlength="50" style="width: 100%" value="' . $descr . '"/>
+						</tr>
+						<tr>
+							<td>Edit Page Content</td>
+						</tr>
+						<tr>
+							<td><textarea id="wikicontent" name="content" rows="15">' . $content . '</textarea></td>
 						</tr>
 					</tbody>
 				</table>
@@ -315,7 +386,6 @@ class Wiki {
 					<input id="submit_button" type="submit" value="submit" />
 				</div>
 			</form>';
-		}
 	}
 }
 

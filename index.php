@@ -58,22 +58,22 @@
 
 				} else if (Utils::page() === "topics") {
 					include_once 'wiki.php';
-					if (Utils::isGet('id')) {
-						if (Utils::isGet('p')) {
-							Wiki::getPage(Utils::get('id'));
-						} else {
-							Wiki::getTopicPages(Utils::get('id'));
-						}
-					} else if (Utils::isGet('action')) {
+					if (Utils::isGet('action')) {
 						Wiki::actions();
 					} else {
-						Wiki::getTopics();
+						if (Utils::isGet('tid')) {
+							Wiki::getTopicPages(Utils::get('tid'));
+						} else if (Utils::isGet('pid')) {
+							Wiki::getPage(Utils::get('pid'));
+						} else {
+							Wiki::getTopics();
+						}
 					}
 
 				} else {
 					include_once 'wiki.php';
 					if (Utils::isLoggedIn()) {
-						print '<div id="register">Welcome, ' . SessionUser::getUsername() . '. ' . SessionUser::getEmail() . '. You are an ' . SessionUser::getStatusDesc() . '.</div>';
+						print '<div id="register">Welcome, ' . SessionUser::getUsername() . '. ' . SessionUser::getEmail() . '. You are ' . SessionUser::getStatusDesc() . '.</div>';
 					} else {
 						echo "You are not logged in.";
 					}

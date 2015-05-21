@@ -104,7 +104,7 @@ class Parser {
 			'html' => '<div style="background: url($1);">$2</div>',
 			'cont' => false,
 		],
-		's' => [ // ??
+		's' => [
 			'code' => '/\[\s*s{1}\s*\|\s*(.*?)\s*\]/',
 			'html' => '<span>$1</span>',
 			'cont' => false,
@@ -231,19 +231,29 @@ class Parser {
 	}
 
 	public static function get($in) {
+		$db = new db;
+		$db->request('SELECT tId FROM page WHERE pId = :pid;');
 		// first match words so our brackets searcher doesn't get confused
 		$count = preg_match_all('/\[\[\s*(.*?)\s*\]\]/', $in, $matches);
 		if ($count > 0) {
 			foreach ($matches[0] as $string) {
 				$oldstring = $string;
 				$string = preg_replace('/(\[|\])/', '', $string);
-				if (Wiki::findWord($string)) {
-					$in = str_replace($oldstring, '<a href="index.php?page=topics&keyword='.$string.'">'.$string.'</a>', $in);
+				$db->bind(':pid', Utils::get('pid'));
+				$tid = $db->getAssoc()['tId'];
+				$npid = Wiki::findWord($string);
+				if (!empty($npid)) {
+					$in = str_replace($oldstring, '<a href="index.php?page=topics&pid='.$npid.'">'.$string.'</a>', $in);
 				} else {
-					$in = str_replace($oldstring, '<a id="wordnotfound" href="index.php?page=topics&keyword='.$string.'&action=new">'.$string.'</a>', $in);
+					if (Wiki::isAuthor($tid)) {
+						$in = str_replace($oldstring, '<a id="wordnotfound" href="index.php?page=topics&tid=' . $tid . '&keyword='.$string.'&action=newpage">'.$string.'</a>', $in);
+					} else {
+						$in = str_replace($oldstring, '<a id="wordnotfound" href="">'.$string.'</a>', $in);
+					}
 				}
 			}
 		}
+		$db = null;
 
 		// comments
 		$count = preg_match_all('/\[\s*\!{1}\s*\|\s*(.*?)\s*\]/', $in, $matches);

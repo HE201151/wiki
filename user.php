@@ -79,6 +79,13 @@ class SessionUser {
 		}
 		return $groups;
 	}
+
+	public static function hasPermission($groups) {
+		$status = Utils::isLoggedIn() ? self::getStatus()[0] : "everyone";
+		$idx = array_search($groups, UserStatus::statusHierarchy);
+		$see = array_search($status, UserStatus::statusHierarchy);
+		return ($see >= $idx);
+	}
 }
 
 class User {

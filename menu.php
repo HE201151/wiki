@@ -6,11 +6,13 @@ include_once 'user.php';
 
 class Menu {
 	public static function showBanner() {
-		echo '
-			<div id="banner">
-				<span id="bannerimg"><img src="' . Jason::getOnce("banner_img") . '" width=70 height=70 /></span>
-				<span id="bannertext"><a href="index.php">' . Jason::getOnce("banner") . "</a></span>
-			</div>";
+		$config = new Jason;
+		if (!empty($config->get("banner_img"))) {
+			print '<div id="banner"><span id="bannerimg"><img src="' . $config->get("banner_img") . '" width=70 height=70 /></span>
+					<span id="bannertext"><a href="index.php">' . $config->get("banner") . '</a></span></div>';
+		} else {
+			print '<div id="banneralone"><span id="bannertext"><a href="index.php">' . $config->get("banner") . '</a></span></div>';
+		}
 	}
 
 	public static function showLogin() {

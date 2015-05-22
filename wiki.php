@@ -48,6 +48,7 @@ class Wiki {
 	}
 
 	public static function canSeeTopic($tid) {
+		if ($tid == 0) return false;
 		return SessionUser::hasPermission(self::getVisibility($tid));
 	}
 
@@ -59,6 +60,7 @@ class Wiki {
 	}
 
 	public static function canSeePage($pid) {
+		if ($pid == 0) return false;
 		$db = new db;
 		$db->request('SELECT tId FROM page WHERE pId = :pid;');
 		$db->bind(':pid', $pid);
@@ -79,15 +81,32 @@ class Wiki {
 		return $tid['tId'];
 	}
 
+	public static function insertKeyword($pid, $keyword) {
+		if (self::findWordInPage($pid, $keyword)) {
+			return;
+		} else {
+			$db = new db;
+			$db->request('UPDATE page SET keywords = concat(IFNULL(keywords, ""), :keyw) WHERE pId = :pid;');
+			$db->bind(':keyw', $keyword);
+			$db->bind(':pid', $pid);
+			$db->doquery();
+		}
+	}
+
 	public static function insertPage($tid) {
+		if (Utils::isGet('keyword')) {
+			$keyw = Utils::get('keyword');
+		} else {
+			$keyw = "empty";
+		}
 		$db = new db;
 		$db->request('INSERT INTO page (tId, content, pCreation, pLastModif, pTitle, pDesc) VALUES (:tid, "empty", now(), now(), :ptitle, "empty");');
 		$db->bind(':tid', $tid);
-		$db->bind(':ptitle', Utils::isGet('keyword') ? Utils::get('keyword') : "empty");
+		$db->bind(':ptitle', $keyw);
 		$db->doquery();
 		$db->request('SELECT pId FROM page GROUP BY pId DESC');
-		$tid = $db->getAssoc();
-		return $tid['pId'];
+		$pid = $db->getAssoc();
+		return $pid['pId'];
 	}
 
 	public static function updateTopic($id, $title, $descr, $vis, $mod) {
@@ -128,6 +147,15 @@ class Wiki {
 		$db->bind(':word', $word);
 		$result = $db->getAssoc();
 		return ($result['pId']);
+	}
+
+	public static function findWordInPage($pid, $word) {
+		$db = new db;
+		$db->request("SELECT 1 FROM page WHERE keywords LIKE concat('%', :word, '%') AND pId = :pid");
+		$db->bind(':word', $word);
+		$db->bind(':pid', $pid);
+		$result = $db->getAssoc();
+		return (!empty($result));
 	}
 
 	public static function getTopicsFromKey($key, $field, $exact) {
@@ -460,6 +488,10 @@ class Wiki {
 
 	public static function getPage($pid) {
 		if (!self::canSeePage($pid)) {
+			if (!Utils::isLoggedIn()) {
+				print '<div id="register">Please sign in to see this topic.</div>';
+				return;
+			}
 			print '<div id="register">You have no permission to see this topic.</div>';
 			return;
 		} else {

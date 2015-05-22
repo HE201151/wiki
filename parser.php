@@ -241,6 +241,7 @@ class Parser {
 				$string = preg_replace('/(\[|\])/', '', $string);
 				$db->bind(':pid', Utils::get('pid'));
 				$tid = $db->getAssoc()['tId'];
+				Wiki::insertKeyword(Utils::get('pid'), $string);
 				$npid = Wiki::findWord($string);
 				if (!empty($npid)) {
 					$in = str_replace($oldstring, '<a href="index.php?page=topics&pid='.$npid.'">'.$string.'</a>', $in);
@@ -347,6 +348,8 @@ class Parser {
 //$tabletest = '[t|2|[th|t1|t2|t3]|[ti|one|two|three]|[ti|four|five|six]|[ti|seven|eight|nine]]';
 //$deltest = '[p|Et encore du [b|gras [u|souligné]][br]et du[#F00|rouge]]';
 
-// $uloltest = '[#ff0|[ol_|a|0|[ol|a1|[#fff|b2]]|[ul|1|2|3]|[ol|4|5|6]|z]]]';
-//  print Parser::get($uloltest);
+//  $uloltest = '[#ff0|[ol_|a|0|[ol|a1|[#fff|b2]]|[ul|1|2|3]|[ol|4|5|6]|z]]]';
+//   print Parser::get($uloltest);
+// $hr = '[hr][br]';
+// print Parser::get($hr);
 ?>

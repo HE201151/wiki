@@ -281,6 +281,10 @@ select#select {
     width: 100%;
 }
 
+select#mod {
+    width: 100%;
+}
+
 td#tcat {
     background-color: white;
     color: #34495e;
@@ -354,4 +358,9 @@ textarea#wikicontent {
 
 #wordnotfound {
     color: #FF5252!important;
+}
+
+td.trowbig {
+    width: 20%;
+    border-top: 1px solid white;
 }

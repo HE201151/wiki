@@ -79,13 +79,32 @@ if (!empty($_POST)) {
 					$msg = 'Your avatar was changed.';
 					Mail::sendMail(User::getEmailFromUid(Utils::get('uid')), Jason::getOnce("admin_mail"), 'Profile Change', $msg, false);
 				} else { 
-					$imagePath =User::checkAvatar(SessionUser::getUserId());
+					$imagePath = User::checkAvatar(SessionUser::getUserId());
 					User::updateAvatar(SessionUser::getUserId(), $imagePath);
 					Utils::setSession('avatar', $imagePath);
 				}
 				Error::set('Avatar changed sucessfully.');
 			} catch (Exception $e) {
 				Error::exception($e);
+			} finally {
+				Utils::goBack();
+			}
+			break;
+
+		case 'changeStatus' :
+			try {
+				if (Utils::isGet('uid')) {
+					if (Utils::isPost('select')) {
+						User::changeStatus(Utils::get('uid'), Utils::stringToArray(Utils::post('select')));
+						$msg = 'Your status was changed to ' . Utils::post('select');
+						Mail::sendMail(User::getEmailFromUid(Utils::get('uid')), Jason::getOnce("admin_mail"), 'Status Change', $msg, false);
+					} else {
+						Error::set("No status set.");
+					}
+					Error::set('Status updated succesfully.');
+				}
+			} catch (Exception $e) {
+				Utils::exception($e);
 			} finally {
 				Utils::goBack();
 			}

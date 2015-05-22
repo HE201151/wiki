@@ -51,6 +51,7 @@ class Menu {
 	public static function getNavigation() {
 		echo "<ul>";
 		echo '<li><a href="index.php">Home</a></li>';
+		echo '<li><a href="index.php?page=search">Search</a></li>';
 		if (Utils::isLoggedIn()) {
 			if (SessionUser::isAdmin(SessionUser::getStatus())) {
 				echo '<li><a href="?page=admin">Admin</a></li>';

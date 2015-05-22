@@ -30,6 +30,9 @@ abstract class UserStatus {
 
 	const canWiki = [ self::Administrator, self::Moderator, self::Member, self::ForgotPassword ];
 
+	const groups = [ self::Administrator, self::Moderator, self::Member, self::Reactivation,
+			self::ForgotPassword, self::Frozen, self::Banned, self::Registered, self::Deregistered ];
+
 	const profileRequest = 'SELECT id, avatar, username, status, activated, lastconnect FROM users ';
 }
 
@@ -245,6 +248,16 @@ class User {
 		return Utils::stringToArray($result['status']);
 	}
 
+	public static function getUsernameFromUid($uid) {
+		if (empty($uid)) {
+			return "nobody";
+		}
+		$db = new db;
+		$db->request('SELECT username FROM users where id = :id');
+		$db->bind(':id', $uid);
+		return $db->getAssoc()['username'];
+	}
+
 	public static function getEmailFromUid($uid) {
 		$db = new db;
 		$db->request('SELECT email FROM users WHERE id = :id');
@@ -291,6 +304,12 @@ class User {
 
 		$db->request($request);
 		$db->bind(':value', $value);
+		return $db->getAllAssoc();
+	}
+
+	public static function getMods() {
+		$db = new db;
+		$db->request("SELECT id, username FROM users WHERE status like concat('%', 'moderator', '%');");
 		return $db->getAllAssoc();
 	}
 
@@ -705,6 +724,48 @@ class User {
 		self::validateAvatarChange();
 	}
 
+	public static function getChangeStatusForm($uid = "") {
+		$get = $uid;
+		if (!empty($uid)) {
+			$get = '&uid=' . $uid;
+		}
+		print '<form id="register" action="post.php?action=changeStatus' . $get .'" method="post" method="post" accept-charset="UTF-8">
+			<table border="0" cellspacing="0" cellpadding="6" class="tborder">
+			<tbody>
+				<tr>
+					<td id="regtitle">User Status Change</td>
+				</tr>
+				<tr id="formcontent">
+					<td>
+						<fieldset>
+							<table cellpadding="6" cellspacing="0" width=100%>
+								<tbody>
+									<tr> 
+										<td>Current Status : ' . Utils::arrayToString(self::getStatusFromUid($uid)) . '</td>
+									</tr>
+									<tr>
+										<td>
+											<select name="select" id="select">';
+											foreach (UserStatus::groups as $group) {
+												print '<option value="' . $group . '">' . $group . '</option>';
+											}
+											print '</select>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</fieldset>
+					</td>
+				</tr>
+			</tbody>
+			</table>
+						<br />
+			<div id="submit" align="center">
+				<input type="submit" name="Submit" value="Submit status change!" />
+			</div>
+			</form>';
+	}
+
 	public static function checkNewPassword() {
 		if (Utils::post('newpassword') !== Utils::post('newpassword2')) {
 			throw new Exception('Passwords do not match');
@@ -1080,7 +1141,7 @@ class User {
 						</fieldset>
 					</td>
 				</tr> ';
-				if (SessionUser::isAdmin(SessionUser::getStatus())) {
+				if (SessionUser::isAdmin()) {
 					print '
 				<tr>
 					<tr>
@@ -1099,7 +1160,14 @@ class User {
 							</tr>
 							<tr>
 								<td><a href="index.php?page=profile&action=changeAvatar&uid=' . $this->getUserid() . '">Change avatar</a></td>
-							</tr>
+							</tr>';
+							if (SessionUser::isAdmin()) {
+								print '
+								<tr>
+									<td><a href="index.php?page=profile&action=changeStatus&uid=' . $this->getUserId() . '">Change status</a></td>
+								</tr>';
+							}
+						print '
 						</td>
 					</tr>
 				</tr>';
@@ -1142,6 +1210,10 @@ class User {
 
 				case "changeAvatar" : 
 					self::getAvatarChangeForm($get);
+					return;
+
+				case "changeStatus" :
+					self::getChangeStatusForm($get);
 					return;
 			}
 		}

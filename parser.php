@@ -245,7 +245,7 @@ class Parser {
 				if (!empty($npid)) {
 					$in = str_replace($oldstring, '<a href="index.php?page=topics&pid='.$npid.'">'.$string.'</a>', $in);
 				} else {
-					if (Wiki::isAuthor($tid)) {
+					if (Wiki::canEditPage($tid)) {
 						$in = str_replace($oldstring, '<a id="wordnotfound" href="index.php?page=topics&tid=' . $tid . '&keyword='.$string.'&action=newpage">'.$string.'</a>', $in);
 					} else {
 						$in = str_replace($oldstring, '<a id="wordnotfound" href="">'.$string.'</a>', $in);

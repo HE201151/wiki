@@ -56,6 +56,10 @@
 					include_once 'register.php';
 					Register::resetPassword();
 
+				} else if (Utils::page() === "search") {
+					include_once 'user.php';
+					User::getWikiSearchForm();
+
 				} else if (Utils::page() === "topics") {
 					include_once 'wiki.php';
 					if (Utils::isGet('action')) {

@@ -51,6 +51,13 @@ class Wiki {
 		return SessionUser::hasPermission(self::getVisibility($tid));
 	}
 
+	public static function canSearchTopic($tid) {
+		if (!Utils::isLoggedIn()) {
+			return SessionUser::anonymousSearchPermission(self::getVisibility($tid));
+		}
+		return self::canSeeTopic($tid);
+	}
+
 	public static function canSeePage($pid) {
 		$db = new db;
 		$db->request('SELECT tId FROM page WHERE pId = :pid;');
@@ -121,6 +128,24 @@ class Wiki {
 		$db->bind(':word', $word);
 		$result = $db->getAssoc();
 		return ($result['pId']);
+	}
+
+	public static function getTopicsFromKey($key, $field, $exact) {
+		$db = new db;
+
+		$request = 'SELECT p.tId, pId, tTitle, pTitle, authorId FROM page AS p, topic AS t WHERE p.tId = t.tId';
+
+		$match = $exact ? " = :value;" : " like concat('%', :value, '%');";
+
+		if ($field === 'tTitle' || $field === 'tDesc' || $field === 'keywords') {
+			$request .= ' AND ' . $field . $match;
+		} else if (!empty($key) && !empty($value)) {
+			throw new Exception('Wrong search key');
+		}
+
+		$db->request($request);
+		$db->bind(':value', $key);
+		return $db->getAllAssoc();
 	}
 
 	public static function actions() {

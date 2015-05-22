@@ -3,6 +3,7 @@
 include_once 'db.php';
 include_once 'mail.php';
 include_once 'hash.php';
+include_once 'wiki.php';
 
 abstract class UserStatus {
 	const Administrator = "admin";
@@ -14,8 +15,9 @@ abstract class UserStatus {
 	const Banned = "banned";
 	const Registered = "registered";
 	const Deregistered = "deregistered";
+	const Everyone = "everyone";
 
-	const statusHierarchy = [ "everyone", self::Member, self::Moderator, self::Administrator ];
+	const statusHierarchy = [ self::Everyone, self::Member, self::Moderator, self::Administrator ];
 
 	const canLogin = [ self::Administrator, self::Moderator, self::Member, 
 						self::Reactivation, self::Frozen ];
@@ -84,10 +86,14 @@ class SessionUser {
 	}
 
 	public static function hasPermission($groups) {
-		$status = Utils::isLoggedIn() ? self::getStatus()[0] : "everyone";
+		$status = Utils::isLoggedIn() ? self::getStatus()[0] : UserStatus::Everyone;
 		$idx = array_search($groups, UserStatus::statusHierarchy);
 		$see = array_search($status, UserStatus::statusHierarchy);
 		return ($see >= $idx);
+	}
+
+	public static function anonymousSearchPermission($groups) {
+		return ($groups === UserStatus::Member || $groups === UserStatus::Everyone);
 	}
 }
 
@@ -899,6 +905,102 @@ class User {
 											<option value="username">username</option>
 											<option value="email">email</option>
 											<option value="status">status</option>
+										</select>
+									</td>
+									<td><input type="checkbox" name="exact" value="exact"> exact match</td>
+								</tr>
+							</tbody>
+						</table>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<br />
+		<div id="submit" align="center">
+			<input type="submit" name="Submit" value="search" />
+		</div>
+		</form>';
+		print self::validateSearchForm();
+	}
+	
+	public static function getWikiSearchForm() {
+		if (Utils::isPost('search') && Utils::isPost('select')) {
+			$topics = Wiki::getTopicsFromKey(Utils::post('search'), Utils::post('select'), Utils::isPost('exact') ? Utils::post('exact') : false);
+			if (empty($topics)) {
+				print '<div id="register">No topics were found.</div>';
+				return;
+			}
+			$db = new db;
+			print '<table id="register" border="0" cellspacing="0" cellpadding="6" class="tborder">
+			<tbody>
+				<tr>
+					<td id="regtitle">
+						<span style="float: left;">Topics</span>
+						<span style="float: right;"><a href="index.php?page=topics&action=newtopic">Write on a new topic.</a></span>
+					</td>
+				</tr>
+				<tr id="formcontent">
+					<td>
+						<fieldset>
+							<table cellpadding="6" cellspacing="0" width=100%>
+								<tbody>
+									<tr>
+										<td class="tcat">Topic</td>
+										<td class="tcat">Page</td>
+										<td class="tcat">Visibility</td>
+										<td class="tcat">Author</td>
+									</tr>';
+									foreach ($topics as $topic => $content) {
+										if (Wiki::canSearchTopic($content['tId'])) {
+										print '
+											<tr>
+												<td class="trow"><a href=index.php?page=topics&tid=' . $content['tId'] . ' target="_blank">' . $content['tTitle'] . '</a></td>
+												<td class="trow"><a href=index.php?page=topics&pid=' . $content['pId'] . ' target="_blank">' . $content['pTitle'] . '</a></td>
+												<td class="trow"> ' . Wiki::getVisibility($content['tId']) . '</td>
+												<td class="trow">';
+												if (!is_numeric($content['authorId'])) {
+													print 'anonymous author';
+												} else {
+													$db->request('SELECT username FROM users WHERE id = :id;');
+													$db->bind(':id', $content['authorId']);
+													$uname = $db->getAssoc();
+													print '<a href="index.php?page=profile&uid=' . $content['authorId'] . '">' . $uname['username'] . '</a>';
+												}
+												'</td>
+											</tr>';
+										}
+									}
+									print '
+									</tbody>
+							</table>
+						</fieldset>
+					</td>
+				</tr>
+				</tbody>
+			</table>';
+			return;
+		}
+		print '<form id="register" action="index.php?page=search" method="post">
+		<table border="0" cellspacing="0" cellpadding="6" class="tborder">
+			<tbody>
+				<tr>
+					<td id="regtitle">Wiki Search</td>
+				</tr>
+				<tr id="formcontent">
+					<td>
+						<table cellpadding="6" cellspacing="0" width=100%>
+							<tbody>
+								<tr>
+									<td colspan="2">Search</td>
+									<td>What to search</td>
+								</tr>
+								<tr>
+									<td colspan="2"><input type="text" name="search" id="search" maxlength="50" style="width: 100%" value="" required/></td>
+									<td>
+										<select id="select" name="select">
+											<option value="tTitle">topic title</option>
+											<option value="tDesc">topic description</option>
+											<option value="keywords">topic keywords</option>
 										</select>
 									</td>
 									<td><input type="checkbox" name="exact" value="exact"> exact match</td>
